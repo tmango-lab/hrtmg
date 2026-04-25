@@ -1936,17 +1936,34 @@ function handleBackupUpload(event) {
         }
       }
 
+      // Helper function to upsert large payloads in chunks
+      const upsertChunks = async (table, payload, conflictCol) => {
+          const chunkSize = 200; // Safe chunk size
+          for (let i = 0; i < payload.length; i += chunkSize) {
+              const chunk = payload.slice(i, i + chunkSize);
+              let error;
+              if (conflictCol) {
+                  const res = await supabase.from(table).upsert(chunk, { onConflict: conflictCol });
+                  error = res.error;
+              } else {
+                  const res = await supabase.from(table).insert(chunk);
+                  error = res.error;
+              }
+              if (error) console.error(`Error chunk operation on ${table}:`, error);
+          }
+      };
+
       // 6. Upload Time Data to Supabase
-      if (tpPayload.length > 0) await supabase.from('time_punches').upsert(tpPayload, { onConflict: 'employee_id, punch_date' });
-      if (edPayload.length > 0) await supabase.from('manual_edits').upsert(edPayload, { onConflict: 'employee_id, edit_date' });
+      if (tpPayload.length > 0) await upsertChunks('time_punches', tpPayload, 'employee_id, punch_date');
+      if (edPayload.length > 0) await upsertChunks('manual_edits', edPayload, 'employee_id, edit_date');
       
       if (advPayload.length > 0) {
         await supabase.from('advances').delete().eq('month', uploadMonth);
-        await supabase.from('advances').insert(advPayload);
+        await upsertChunks('advances', advPayload, null); // insert
       }
       if (errPayload.length > 0) {
         await supabase.from('errands').delete().eq('month', uploadMonth);
-        await supabase.from('errands').insert(errPayload);
+        await upsertChunks('errands', errPayload, null); // insert
       }
       showToast('Migrate Backup สำเร็จ!');
       
