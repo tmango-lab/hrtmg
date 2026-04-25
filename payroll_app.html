@@ -147,12 +147,13 @@ td:first-child,td:nth-child(2),td:nth-child(3),td:nth-child(4){text-align:left}
   <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
     <!-- System & Backup -->
     <button class="btn btn-outline" onclick="exportBackup()" style="border-color:var(--yellow);color:var(--yellow)" title="สำรองข้อมูลทั้งหมดของเดือนนี้">📤 Backup</button>
-    <input type="file" id="backup-upload" accept=".json" style="display: none;" onchange="handleBackupUpload(event)">
+    <input type="file" id="backup-upload" accept=".json" style="display: none;" onclick="this.value=null" onchange="handleBackupUpload(event)">
     <button class="btn btn-outline" onclick="document.getElementById('backup-upload').click()" style="border-color:var(--yellow);color:var(--yellow)" title="เรียกคืนข้อมูลจากไฟล์ Backup">📥 Restore</button>
+    <button onclick="forceRestore()" style="background:var(--red); color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-family:inherit;">🛠️ ซ่อมข้อมูล (กดตรงนี้)</button>
     <div style="width:1px; height:24px; background:var(--border); margin:0 4px;"></div>
 
     <!-- Main Actions -->
-    <input type="file" id="csv-upload" accept=".csv" style="display: none;" onchange="handleCSVUpload(event)">
+    <input type="file" id="csv-upload" accept=".csv" style="display: none;" onclick="this.value=null" onchange="handleCSVUpload(event)">
     <button class="btn btn-primary" onclick="document.getElementById('csv-upload').click()">📁 อัปโหลด CSV <span style="font-size:0.8rem; font-weight:normal; opacity:0.9;">(สแกนนิ้ว)</span></button>
     <button class="btn btn-success" onclick="exportCSV()">📥 ส่งออก Excel</button>
     <button class="btn btn-outline" onclick="window.print()">🖨️ พิมพ์</button>
@@ -1993,6 +1994,21 @@ function handleBackupUpload(event) {
   };
   r.readAsText(file);
   event.target.value = '';
+}
+
+async function forceRestore() {
+  try {
+    const res = await fetch('25042569.json');
+    if (!res.ok) {
+      alert('หาไฟล์ 25042569.json ไม่เจอในระบบครับ');
+      return;
+    }
+    const blob = await res.blob();
+    const file = new File([blob], '25042569.json', { type: 'application/json' });
+    handleBackupUpload({ target: { files: [file], value: '' } });
+  } catch (err) {
+    alert('Force Restore Error: ' + err.message);
+  }
 }
 
 </script>
