@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ | Payroll System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #111827;
+            --surface: #1f2937;
+            --text: #f3f4f6;
+            --muted: #9ca3af;
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --red: #ef4444;
+            --border: #374151;
+        }
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .login-card {
+            background-color: var(--surface);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+        }
+        .logo {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--muted);
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+        .error-message {
+            color: var(--red);
+            margin-top: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+            min-height: 20px;
+        }
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <div class="logo">💰 Payroll System</div>
+    
+    <div class="form-group">
+        <label>อีเมล (Email)</label>
+        <input type="email" id="email" placeholder="admin@example.com">
+    </div>
+    
+    <div class="form-group">
+        <label>รหัสผ่าน (Password)</label>
+        <input type="password" id="password" placeholder="••••••••">
+    </div>
+    
+    <button class="btn-primary" id="loginBtn" onclick="handleLogin()">เข้าสู่ระบบ</button>
+    
+    <div class="error-message" id="errorMsg"></div>
+</div>
+
+<!-- โหลด Supabase JS Client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- โหลดไฟล์ตั้งค่าของเรา -->
+<script src="supabase-client.js"></script>
+
+<script>
+    // ตรวจสอบว่า login แล้วหรือยัง ถ้าล็อกอินแล้วให้ข้ามไปหน้าแอปเลย
+    async function checkCurrentSession() {
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+            window.location.href = 'payroll_app.html';
+        }
+    }
+    checkCurrentSession();
+
+    async function handleLogin() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorMsg = document.getElementById('errorMsg');
+        const btn = document.getElementById('loginBtn');
+        
+        if (!email || !password) {
+            errorMsg.textContent = "กรุณากรอกอีเมลและรหัสผ่าน";
+            return;
+        }
+        
+        errorMsg.textContent = "";
+        btn.classList.add('loading');
+        btn.textContent = "กำลังเข้าสู่ระบบ...";
+        
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+        });
+        
+        if (error) {
+            console.error(error);
+            errorMsg.textContent = "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
+            btn.classList.remove('loading');
+            btn.textContent = "เข้าสู่ระบบ";
+        } else {
+            // สำเร็จ
+            window.location.href = 'payroll_app.html';
+        }
+    }
+    
+    // กด Enter เพื่อล็อกอินได้
+    document.getElementById('password').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') handleLogin();
+    });
+</script>
+
+</body>
+</html>
