@@ -421,7 +421,7 @@ async function initApp() {
       DAYS_IN_MONTH = new Date(parseInt(CURRENT_MONTH.split('-')[0]), parseInt(CURRENT_MONTH.split('-')[1]), 0).getDate();
     }
     
-    document.getElementById('payroll-table').innerHTML = '<tr><td colspan="15" style="text-align:center;padding:50px;font-size:1.2rem;color:var(--primary);">🔄 กำลังโหลดข้อมูลจาก Cloud Database...</td></tr>';
+    document.getElementById('main').innerHTML = '<div style="text-align:center;padding:50px;font-size:1.2rem;color:var(--primary);">🔄 กำลังโหลดข้อมูลจาก Cloud Database...</div>';
     
     const [settingsRes, empRes, punchesRes, editsRes, advRes, errRes] = await Promise.all([
       supabase.from('system_settings').select('*').eq('id', 'main').maybeSingle(),
@@ -662,7 +662,7 @@ function calculateAllData(skipRender = false) {
   });
 
   const allData = [];
-  for (const eid of Object.keys(RAW_PUNCHES).sort((a,b)=>+a-+b)) {
+  for (const eid of Object.keys(EMP_NAMES).sort((a,b)=>+a-+b)) {
     const srBase = SHIFT[eid];
     if (!srBase) continue; // safety check
     const empRows = [];

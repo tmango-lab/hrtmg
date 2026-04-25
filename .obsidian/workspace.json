@@ -185,10 +185,11 @@
   },
   "active": "ae485bba92d84858",
   "lastOpenFiles": [
+    "architecture.md",
+    "migration_tasks.md",
     "login.html",
     "supabase-client.js",
     "supabase_schema.sql",
-    "skill.md",
-    "architecture.md"
+    "skill.md"
   ]
 }
