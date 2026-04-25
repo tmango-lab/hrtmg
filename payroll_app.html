@@ -330,6 +330,20 @@ let DEPT_RULES = {};
 let GLOBAL_RULES = null;
 let DAYS_IN_MONTH = new Date(parseInt(CURRENT_MONTH.split('-')[0]), parseInt(CURRENT_MONTH.split('-')[1]), 0).getDate();
 
+// Helper: upsert in safe chunks (avoids PostgREST request size limit)
+async function upsertInChunks(table, payload, conflictCol, chunkSize = 150) {
+  for (let i = 0; i < payload.length; i += chunkSize) {
+    const chunk = payload.slice(i, i + chunkSize);
+    let res;
+    if (conflictCol) {
+      res = await supabase.from(table).upsert(chunk, { onConflict: conflictCol });
+    } else {
+      res = await supabase.from(table).insert(chunk);
+    }
+    if (res.error) console.error(`[upsertInChunks] ${table} chunk ${i}-${i+chunk.length}:`, res.error);
+  }
+}
+
 async function saveRawPunchesToCloud() {
   const payload = [];
   for (const eid in RAW_PUNCHES) {
@@ -337,7 +351,7 @@ async function saveRawPunchesToCloud() {
       payload.push({ employee_id: eid, month: CURRENT_MONTH, punch_date: r.date, clock_in: r.cin, clock_out: r.cout, late_minutes: r.lateM });
     });
   }
-  if (payload.length > 0) await supabase.from('time_punches').upsert(payload, { onConflict: 'employee_id, punch_date' });
+  if (payload.length > 0) await upsertInChunks('time_punches', payload, 'employee_id, punch_date');
 }
 function saveRawPunches() { saveRawPunchesToCloud().catch(console.error); }
 
@@ -346,7 +360,7 @@ async function saveEditsToCloud() {
     const [eid, ...dateParts] = key.split('_');
     return { employee_id: eid, month: CURRENT_MONTH, edit_date: dateParts.join('_'), edit_data: EDITS[key] };
   });
-  if (payload.length > 0) await supabase.from('manual_edits').upsert(payload, { onConflict: 'employee_id, edit_date' });
+  if (payload.length > 0) await upsertInChunks('manual_edits', payload, 'employee_id, edit_date');
 }
 function saveEdits() { saveEditsToCloud().catch(console.error); }
 
@@ -1936,34 +1950,23 @@ function handleBackupUpload(event) {
         }
       }
 
-      // Helper function to upsert large payloads in chunks
-      const upsertChunks = async (table, payload, conflictCol) => {
-          const chunkSize = 200; // Safe chunk size
-          for (let i = 0; i < payload.length; i += chunkSize) {
-              const chunk = payload.slice(i, i + chunkSize);
-              let error;
-              if (conflictCol) {
-                  const res = await supabase.from(table).upsert(chunk, { onConflict: conflictCol });
-                  error = res.error;
-              } else {
-                  const res = await supabase.from(table).insert(chunk);
-                  error = res.error;
-              }
-              if (error) console.error(`Error chunk operation on ${table}:`, error);
-          }
-      };
+      // Helper function is now global: upsertInChunks()
 
       // 6. Upload Time Data to Supabase
-      if (tpPayload.length > 0) await upsertChunks('time_punches', tpPayload, 'employee_id, punch_date');
-      if (edPayload.length > 0) await upsertChunks('manual_edits', edPayload, 'employee_id, edit_date');
+      showToast(`⏫ กำลังอัปโหลดข้อมูลสแกนนิ้ว ${tpPayload.length} แถว...`);
+      if (tpPayload.length > 0) await upsertInChunks('time_punches', tpPayload, 'employee_id, punch_date');
+      showToast(`⏫ กำลังอัปโหลด Manual Edits ${edPayload.length} แถว...`);
+      if (edPayload.length > 0) await upsertInChunks('manual_edits', edPayload, 'employee_id, edit_date');
       
       if (advPayload.length > 0) {
+        showToast(`⏫ กำลังอัปโหลด Advances ${advPayload.length} รายการ...`);
         await supabase.from('advances').delete().eq('month', uploadMonth);
-        await upsertChunks('advances', advPayload, null); // insert
+        await upsertInChunks('advances', advPayload, null);
       }
       if (errPayload.length > 0) {
+        showToast(`⏫ กำลังอัปโหลด Errands ${errPayload.length} รายการ...`);
         await supabase.from('errands').delete().eq('month', uploadMonth);
-        await upsertChunks('errands', errPayload, null); // insert
+        await upsertInChunks('errands', errPayload, null);
       }
       showToast('Migrate Backup สำเร็จ!');
       
