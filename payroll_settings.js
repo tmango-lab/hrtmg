@@ -85,31 +85,7 @@ const SHIFT_TEMPLATES = [
   {id:'shift_17', name:'กะ 17:00',         ss:17, dout:24, hrs:7,  ot:'none',     lt:'part'}
 ];
 
-const EMPLOYEES = [
-  {id:'1', name:'JET',     type:'รายวัน',   shiftId:'shift_14',       daily:380, monthly:0,     hrs:10, otType:'football', lateType:'football',  dept:'football'},
-  {id:'2', name:'Mild',    type:'รายวัน',   shiftId:'shift_10',       daily:380, monthly:0,     hrs:11, otType:'morning',  lateType:'general',   dept:'serve_daily'},
-  {id:'3', name:'Mameaw',  type:'รายเดือน', shiftId:'shift_10',       daily:0,   monthly:11000, hrs:11, otType:'morning',  lateType:'general',   dept:'serve_monthly'},
-  {id:'4', name:'Bird',    type:'รายเดือน', shiftId:'shift_10',       daily:0,   monthly:11000, hrs:11, otType:'morning',  lateType:'general',   dept:'serve_monthly'},
-  {id:'5', name:'Ploysai', type:'รายวัน',   shiftId:'shift_15',       daily:380, monthly:0,     hrs:10, otType:'none',     lateType:'general',   dept:'serve_daily_afternoon'},
-  {id:'6', name:'Chompoo', type:'รายเดือน', shiftId:'shift_10_office',  daily:0,   monthly:12000, hrs:10, otType:'none',     lateType:'office',    dept:'serve_monthly'},
-  {id:'7', name:'Mint',    type:'พาร์ทไทม์',shiftId:'shift_17',       daily:240, monthly:0,     hrs:7,  otType:'none',     lateType:'part',      dept:'parttime'},
-  {id:'8', name:'Looknum', type:'รายเดือน', shiftId:'shift_10_office',  daily:0,   monthly:12000, hrs:10, otType:'looknum',  lateType:'office',    dept:'serve_monthly'},
-  {id:'9', name:'Aum',     type:'รายเดือน', shiftId:'shift_10',       daily:0,   monthly:11000, hrs:11, otType:'morning',  lateType:'general',   dept:'serve_monthly'},
-  {id:'10',name:'Pluem',   type:'พาร์ทไทม์',shiftId:'shift_17',       daily:240, monthly:0,     hrs:7,  otType:'none',     lateType:'part',      dept:'parttime'},
-  {id:'11',name:'Jay',     type:'พาร์ทไทม์',shiftId:'shift_17',       daily:240, monthly:0,     hrs:7,  otType:'none',     lateType:'part',      dept:'parttime'},
-  {id:'12',name:'Cream',   type:'พาร์ทไทม์',shiftId:'shift_17',       daily:240, monthly:0,     hrs:7,  otType:'none',     lateType:'part',      dept:'parttime'},
-  {id:'13',name:'Jui',     type:'รายวัน',   shiftId:'shift_10_kitchen',daily:700,monthly:0,     hrs:12, otType:'kitchen',  lateType:'kitchen',   dept:'kitchen'},
-  {id:'14',name:'Noi',     type:'รายวัน',   shiftId:'shift_10_kitchen',daily:700,monthly:0,     hrs:12, otType:'kitchen',  lateType:'kitchen',   dept:'kitchen'},
-  {id:'15',name:'Wave',    type:'รายเดือน', shiftId:'shift_15',       daily:0,   monthly:11000, hrs:10, otType:'none',     lateType:'general',   dept:'serve_monthly'},
-  {id:'16',name:'Amp',     type:'รายวัน',   shiftId:'shift_10_kitchen',daily:550,monthly:0,     hrs:12, otType:'kitchen',  lateType:'kitchen',   dept:'kitchen'},
-  {id:'17',name:'Ple',     type:'พาร์ทไทม์',shiftId:'shift_17',       daily:240, monthly:0,     hrs:7,  otType:'none',     lateType:'part',      dept:'parttime'},
-  {id:'18',name:'YUNG',    type:'รายวัน',   shiftId:'shift_14',       daily:400, monthly:0,     hrs:10, otType:'football', lateType:'football',  dept:'football'},
-  {id:'19',name:'TAE',     type:'รายวัน',   shiftId:'shift_14',       daily:360, monthly:0,     hrs:10, otType:'football', lateType:'football',  dept:'football'},
-  {id:'20',name:'Ple FB',  type:'รายวัน',   shiftId:'shift_17',       daily:240, monthly:0,     hrs:7,  otType:'none',     lateType:'general',   dept:'football'},
-  {id:'21',name:'TUKTA',   type:'รายวัน',   shiftId:'shift_08',       daily:380, monthly:0,     hrs:9,  otType:'none',     lateType:'general',   dept:'clerk'},
-  {id:'22',name:'Jeab',    type:'รายวัน',   shiftId:'shift_10_kitchen',daily:450,monthly:0,     hrs:12, otType:'kitchen',  lateType:'kitchen',   dept:'kitchen'},
-  {id:'23',name:'ManU',    type:'พาร์ทไทม์',shiftId:'shift_17',       daily:240, monthly:0,     hrs:7,  otType:'none',     lateType:'part',      dept:'parttime'}
-];
+const EMPLOYEES = [];
 
 // ==================== TAB SYSTEM ====================
 function buildTabs(){
@@ -434,6 +410,48 @@ function saveToLocal() {
   showToast('💾 บันทึกการตั้งค่าลงเครื่อง (Local) เรียบร้อยแล้ว!');
 }
 
+async function saveToSupabase() {
+  const data = getSettingsData();
+  
+  // 1. Save system_settings
+  const settingsRow = {
+    id: 'main',
+    shift_templates: data.shiftTemplates,
+    ot_rules: data.otDepartmentRules,
+    global_rules: data.globalRules,
+    departments: data.departments,
+    updated_at: new Date().toISOString()
+  };
+  
+  const { error: err1 } = await supabase.from('system_settings').upsert(settingsRow);
+  if (err1) { console.error(err1); alert('Error saving settings: ' + err1.message); return; }
+
+  // 2. Save employees
+  const empRows = EMPLOYEES.map(e => ({
+    id: e.id,
+    name: e.name,
+    type: e.type,
+    shift_id: e.shiftId,
+    daily_rate: e.daily,
+    monthly_rate: e.monthly,
+    hours_per_day: e.hrs,
+    ot_type: e.otType,
+    late_type: e.lateType,
+    dept: e.dept || 'other'
+  }));
+  
+  const { error: err2 } = await supabase.from('employees').upsert(empRows);
+  if (err2) { console.error(err2); alert('Error saving employees: ' + err2.message); return; }
+  
+  // ให้ลบพนักงานที่ไม่ได้อยู่ใน EMPLOYEES ออกด้วย (ลบคนที่ถูกลบออกจากหน้าตั้งค่า)
+  const currentIds = EMPLOYEES.map(e => e.id);
+  if (currentIds.length > 0) {
+    await supabase.from('employees').delete().not('id', 'in', `(${currentIds.join(',')})`);
+  }
+  
+  showToast('☁️ บันทึกการตั้งค่าขึ้น Cloud เรียบร้อยแล้ว!');
+}
+
 function loadFromLocal() {
   const saved = localStorage.getItem('PAYROLL_SAVED_RULES_V1');
   if(saved) {
@@ -446,10 +464,58 @@ function loadFromLocal() {
   }
 }
 
+async function loadFromSupabase() {
+  // 1. Load system_settings
+  const { data: settingsData, error: err1 } = await supabase.from('system_settings').select('*').eq('id', 'main').maybeSingle();
+  if (err1) { console.error('Error loading settings', err1); }
+  
+  // 2. Load employees
+  const { data: empData, error: err2 } = await supabase.from('employees').select('*');
+  if (err2) { console.error('Error loading employees', err2); }
+  
+  if (settingsData && empData && empData.length > 0) {
+    const combinedData = {
+      shiftTemplates: settingsData.shift_templates || {},
+      otDepartmentRules: settingsData.ot_rules || {},
+      globalRules: settingsData.global_rules || {},
+      departments: settingsData.departments || [],
+      shiftProfiles: {}
+    };
+    
+    empData.forEach(e => {
+      combinedData.shiftProfiles[e.id] = {
+        name: e.name,
+        shiftId: e.shift_id,
+        t: e.type,
+        d: e.daily_rate,
+        mo: e.monthly_rate,
+        hrs: e.hours_per_day,
+        otType: e.ot_type,
+        lateType: e.late_type,
+        dept: e.dept
+      };
+    });
+    
+    try {
+      parseAndLoad(combinedData);
+      console.log('✅ Loaded configuration from Supabase Cloud');
+    } catch(err) {
+      console.warn('⚠️ Failed to parse Supabase config', err);
+    }
+  } else {
+    console.log('No data in Supabase, loading from LocalStorage for migration...');
+    loadFromLocal(); // Fallback ถ้ายังไม่มีใน Cloud
+  }
+}
+
 // ==================== INIT ====================
-buildTabs();
-loadFromLocal(); // โหลดค่าที่เคยเซฟไว้
-renderShifts();
-renderDeptManager();
-renderDeptFilter();
-renderEmployees();
+async function initSettings() {
+  buildTabs();
+  await loadFromSupabase();
+  renderShifts();
+  renderDeptManager();
+  renderDeptFilter();
+  renderEmployees();
+}
+
+initSettings();

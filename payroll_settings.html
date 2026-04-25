@@ -92,7 +92,8 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
   <div class="btn-group">
     <button class="btn btn-back" onclick="location.href='payroll_app.html'">← กลับหน้าหลัก</button>
     <button class="btn btn-purple" onclick="exportSkillMD()">📄 Export skill.md</button>
-    <button class="btn btn-primary" onclick="saveToLocal()">💾 บันทึกลงเครื่อง</button>
+    <button class="btn btn-primary" onclick="saveToSupabase()">☁️ บันทึกขึ้น Cloud</button>
+    <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);margin-left:8px;" onclick="signOut()">🚪 ออกจากระบบ</button>
   </div>
 </div>
 
@@ -388,6 +389,18 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
 </div>
 
 <div id="toast"></div>
+<!-- Supabase Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script>
+  // บังคับว่าต้อง Login ก่อนเข้าหน้านี้
+  requireAuth().then(session => {
+      console.log('Logged in as:', session.user.email);
+  }).catch(err => {
+      window.location.href = 'login.html';
+  });
+</script>
+
 <script src="payroll_settings.js"></script>
 </body>
 </html>

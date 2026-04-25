@@ -185,6 +185,9 @@
   },
   "active": "ae485bba92d84858",
   "lastOpenFiles": [
+    "login.html",
+    "supabase-client.js",
+    "supabase_schema.sql",
     "skill.md",
     "architecture.md"
   ]
