@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>⚙️ ตั้งค่าระบบเงินเดือน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f9fa;--surface:#ffffff;--border:#e2e8f0;
+  --accent:#22c55e;--accent2:#16a34a;--green:#22c55e;--red:#ef4444;
+  --yellow:#f59e0b;--blue:#3b82f6;--purple:#8b5cf6;
+  --text:#1e293b;--muted:#64748b;--card-shadow:0 1px 3px rgba(0,0,0,0.05);
+}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.header{background:#fff;border-bottom:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 2px rgba(0,0,0,0.02);flex-wrap:wrap;gap:12px}
+.header h1{font-size:1.4rem;font-weight:700;color:#0f172a}
+.header .subtitle{font-size:.85rem;color:var(--muted);margin-top:2px}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:8px 16px;border-radius:6px;border:1px solid transparent;cursor:pointer;font-family:inherit;font-size:.85rem;font-weight:500;transition:.2s}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:var(--accent2)}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{background:#2563eb}
+.btn-purple{background:var(--purple);color:#fff}
+.btn-purple:hover{background:#7c3aed}
+.btn-outline{background:#fff;border-color:var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-back{background:#fff;border-color:var(--border);color:var(--muted);display:flex;align-items:center;gap:6px}
+.btn-back:hover{border-color:var(--blue);color:var(--blue)}
+.container{max-width:1400px;margin:0 auto;padding:24px 32px;padding-bottom:80px}
+.tabs{display:flex;gap:4px;margin-bottom:24px;background:#f1f5f9;padding:4px;border-radius:8px;flex-wrap:wrap}
+.tab{padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:500;font-size:.88rem;transition:.2s;border:none;background:transparent;color:var(--muted);font-family:inherit}
+.tab.active{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+.tab:hover:not(.active){color:var(--text)}
+.section{display:none;animation:fadeIn .2s ease}
+.section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.section-title{font-size:1.15rem;font-weight:700;color:#0f172a;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--accent)}
+.card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:14px;box-shadow:var(--card-shadow)}
+.card-title{font-size:.95rem;font-weight:700;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:4px}
+label{font-size:.8rem;color:var(--muted);font-weight:600;letter-spacing:.02em}
+input,select{background:#fff;border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-family:inherit;font-size:.9rem;transition:.15s;width:100%}
+input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(34,197,94,.15)}
+.info-box{background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:10px 14px;font-size:.82rem;color:#0369a1;margin-top:8px;line-height:1.6}
+.info-box.warn{background:#fefce8;border-color:#fde047;color:#713f12}
+.info-box.purple{background:#f5f3ff;border-color:#ddd6fe;color:#6d28d9}
+.divider{height:1px;background:var(--border);margin:14px 0}
+.tag{padding:2px 10px;border-radius:20px;font-size:.76rem;font-weight:600}
+.tag-kitchen{background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe}
+.tag-football{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.tag-general{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
+.tag-monthly{background:#fef9c3;color:#854d0e;border:1px solid #fde047}
+
+/* Shift table */
+.tbl-wrap{overflow-x:auto}
+table.data-table{width:100%;border-collapse:collapse;font-size:.85rem}
+table.data-table th{background:#f8f9fa;padding:8px 12px;text-align:left;color:var(--muted);font-weight:600;font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);white-space:nowrap}
+table.data-table td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+table.data-table tbody tr:hover{background:#f8f9fa}
+table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;border-radius:4px}
+.del-btn{padding:3px 10px;border-radius:4px;background:#fff;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:.78rem;font-family:inherit}
+.del-btn:hover{border-color:var(--red);color:var(--red)}
+.add-btn{margin-top:10px;padding:7px 14px;background:#fff;border:1px solid var(--accent);color:var(--accent);border-radius:6px;cursor:pointer;font-family:inherit;font-size:.85rem;font-weight:500}
+.add-btn:hover{background:#f0fdf4}
+
+/* Toast */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--green);color:#fff;padding:12px 20px;border-radius:6px;font-size:.9rem;font-weight:500;transform:translateY(80px);opacity:0;transition:.3s;z-index:999;box-shadow:0 4px 12px rgba(34,197,94,.2)}
+#toast.show{transform:translateY(0);opacity:1}
+
+@media(max-width:768px){.two-col,.three-col,.grid{grid-template-columns:1fr}}
+
+/* Department Filter Bar */
+.dept-filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.dept-filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;font-family:inherit;font-size:.8rem;font-weight:500;transition:.2s;white-space:nowrap}
+.dept-filter-btn:hover{border-color:var(--accent);color:var(--accent)}
+.dept-filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <h1>⚙️ ตั้งค่าระบบเงินเดือน</h1>
+    <div class="subtitle">ปรับกฎ แล้ว Export เป็น JSON เพื่อส่งให้ AI เรียนรู้</div>
+  </div>
+  <div class="btn-group">
+    <button class="btn btn-back" onclick="location.href='payroll_app.html'">← กลับหน้าหลัก</button>
+    <button class="btn btn-purple" onclick="exportSkillMD()">📄 Export skill.md</button>
+    <button class="btn btn-primary" onclick="saveToLocal()">💾 บันทึกลงเครื่อง</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="tabs" id="tabBar"></div>
+
+  <!-- TAB 1: GLOBAL -->
+  <div id="tab-global" class="section active">
+    <div class="section-title">🌐 ตั้งค่าทั่วไป</div>
+    <div class="card">
+      <div class="card-title">📅 ข้อมูลเดือน / ปี</div>
+      <div class="grid">
+        <div class="field"><label>จำนวนวันในเดือน</label><input type="number" id="g_days" value="30" min="28" max="31"></div>
+        <div class="field"><label>เดือน-ปี (ป้ายชื่อ)</label><input type="text" id="g_month_label" value="เมษายน 2026"></div>
+        <div class="field"><label>อัตรา OT พื้นฐาน (บาท/ชม.)</label><input type="number" id="g_ot_rate" value="40"></div>
+        <div class="field"><label>อัตราพาร์ทไทม์กะเช้า (บาท/วัน)</label><input type="number" id="g_pt_morning_rate" value="350"></div>
+        <div class="field"><label>อัตราพาร์ทไทม์สลับกะ (บาท/วัน)</label><input type="number" id="g_pt_override_rate" value="240"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">❌ กฎลืมสแกน (Missing Punch)</div>
+      <div class="two-col">
+        <div class="field"><label>ลืมสแกนเข้า → ค่าแรงวันนั้น</label>
+          <select id="g_miss_in"><option value="0" selected>0 บาท (ไม่ได้ค่าแรง)</option><option value="half">หักครึ่งวัน</option></select></div>
+        <div class="field"><label>ลืมสแกนออก → ค่าแรงวันนั้น</label>
+          <select id="g_miss_out"><option value="0" selected>0 บาท (ไม่ได้ค่าแรง)</option><option value="half">หักครึ่งวัน</option></select></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🌙 กะข้ามคืน (Overnight)</div>
+      <div class="info-box">✅ เปิดใช้งานอัตโนมัติ: ถ้า <strong>เวลาออก &lt; เวลาเข้า</strong> → ระบบบวก +24 ชม. ให้อัตโนมัติ<br>ตัวอย่าง: เข้า 22:00 ออก 01:00 → คำนวณว่าออก 25:00 (3 ชม.)</div>
+    </div>
+    <div class="card">
+      <div class="card-title">📡 Column Header CSV</div>
+      <div class="grid">
+        <div class="field"><label>Col หมายเลขพนักงาน</label><input type="text" id="g_col_eid" value="หมายเลขพนักงาน, No."></div>
+        <div class="field"><label>Col วันที่</label><input type="text" id="g_col_date" value="วันที่, Date"></div>
+        <div class="field"><label>Col เวลาเข้า</label><input type="text" id="g_col_cin" value="นาฬิกาเข้า, Clock In"></div>
+        <div class="field"><label>Col เวลาออก</label><input type="text" id="g_col_cout" value="นาฬิกาออก, Clock Out"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: SHIFT TEMPLATES -->
+  <div id="tab-shifts" class="section">
+    <div class="section-title">⏰ แม่แบบกะ (Shift Templates)</div>
+    <div class="card">
+      <div class="info-box" style="margin-bottom:14px">แต่ละกะเป็น "แม่แบบกลาง" — พนักงานในหน้า 👥 จะอ้างอิง Shift ID แทนการผูกเวลากับรายคน</div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>Shift ID</th><th>ชื่อกะ</th><th>เข้า (ชม.)</th><th>ออก (ชม.)</th><th>ชม./วัน</th><th>กลุ่ม OT</th><th>กลุ่มสาย</th><th></th></tr></thead>
+          <tbody id="shift-list"></tbody>
+        </table>
+      </div>
+      <button class="add-btn" onclick="addShift()">+ เพิ่มแม่แบบกะ</button>
+    </div>
+  </div>
+
+  <!-- TAB 3: OT & LATE RULES -->
+  <div id="tab-rules" class="section">
+    <div class="section-title">⚖️ กฎ OT & หักสาย</div>
+
+    <!-- ส่วนของ OT -->
+    <h3 style="margin-top:0; margin-bottom:16px; color:var(--blue); display:flex; align-items:center; gap:8px; font-size:1.05rem; border-left:4px solid var(--blue); padding-left:10px;">💵 กฎการคำนวณ OT (ล่วงเวลา)</h3>
+    <div class="card">
+      <div class="card-title">🌅 กะเช้า (Morning OT) — หลังเลิกงาน</div>
+      <div class="three-col">
+        <div class="field"><label>เริ่มคิด OT หลังจาก (น.)</label><input type="text" id="ot_morning_start" value="21:00"></div>
+        <div class="field"><label>ต้องออกหลัง (นาที จึงจะได้)</label><input type="number" id="ot_morning_grace" value="10"></div>
+        <div class="field"><label>ปัดเศษ OT ทีละ (นาที)</label>
+          <select id="ot_morning_round"><option value="30" selected>30 นาที</option><option value="60">60 นาที</option><option value="15">15 นาที</option></select></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🍳 ครัว (Kitchen OT) — ก่อนเข้างาน</div>
+      <div class="two-col">
+        <div class="field"><label>เวลาเข้างาน (น.)</label><input type="text" id="ot_kitchen_shift" value="10:00"></div>
+        <div class="field"><label>ได้ OT ถ้าเข้าก่อน (น.)</label><input type="text" id="ot_kitchen_cutoff" value="09:00"></div>
+      </div>
+      <div class="two-col" style="margin-top:12px;">
+        <div class="field"><label>อัตรา OT (บาท/ชั่วโมง)</label><input type="number" id="ot_kitchen_rate" value="60"></div>
+        <div class="field"><label>ปัดเศษ OT ทีละ (นาที)</label>
+          <select id="ot_kitchen_round"><option value="30" selected>30 นาที</option><option value="60">60 นาที</option></select></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚽ สนามบอล (Football OT) — ก่อนเข้างาน</div>
+      <div class="three-col">
+        <div class="field"><label>เวลาเข้างาน (น.)</label><input type="text" id="ot_football_shift" value="14:00"></div>
+        <div class="field"><label>ได้ OT ถ้าเข้าก่อน (น.)</label><input type="text" id="ot_football_cutoff" value="13:00"></div>
+        <div class="field"><label>ปัดเศษ OT ทีละ (นาที)</label>
+          <select id="ot_football_round"><option value="30" selected>30 นาที</option><option value="60">60 นาที</option></select></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔒 Looknum OT</div>
+      <div class="two-col">
+        <div class="field"><label>คิด OT หลังเวลา (น.)</label><input type="text" id="ot_looknum_start" value="20:00"></div>
+        <div class="field"><label>ต้องออกหลัง (น.) ถึงจะได้</label><input type="text" id="ot_looknum_grace" value="21:10"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">✅ การอนุมัติ OT</div>
+      <div class="info-box warn">⚠️ OT ทุกยอดต้องได้รับการ <strong>Approve</strong> จากแอดมินก่อนบวกเข้าเงินเดือน เพื่อป้องกันพนักงานรูดเกิน</div>
+    </div>
+
+    <!-- ส่วนของการหักสาย -->
+    <h3 style="margin-top:32px; margin-bottom:16px; color:var(--red); display:flex; align-items:center; gap:8px; font-size:1.05rem; border-left:4px solid var(--red); padding-left:10px;">⏰ กฎการหักสาย</h3>
+
+    <div class="card">
+      <div class="card-title"><span class="tag tag-kitchen">🍳 ครัว</span> &nbsp;Kitchen Exact Per-Minute Late</div>
+      <div class="two-col">
+        <div class="field"><label>ผ่อนผัน (นาที ไม่หัก)</label><input type="number" id="late_kitchen_grace" value="10"></div>
+        <div class="field"><label>ฐานเวลาคิดเรท (ชม.)</label><input type="number" id="late_kitchen_base_hrs" value="12"></div>
+      </div>
+      <div class="info-box" style="margin-top:10px;">
+        หักตามนาทีจริง (ไม่ปัดเศษ): สูตร = (เงินรายวัน ÷ ฐานเวลา ÷ 60) × นาทีที่สาย <br>
+        เช่น Jui รายวัน 700 ฐาน 12ชม. เรท = 0.97บ./นาที | เข้า 10:45 (สาย 45 นาที) โดนหัก 45 × 0.97 = 43.65 บาท
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="tag" style="background:#0984e3;color:white">🏢 ออฟฟิศ</span> &nbsp;Office Exact Per-Minute (Looknum, Chompoo)</div>
+      <div class="two-col">
+        <div class="field"><label>ผ่อนผัน (นาที ไม่หัก)</label><input type="number" id="late_office_grace" value="10"></div>
+        <div class="field"><label>ฐานเวลาคิดเรท (ชม.)</label><input type="number" id="late_office_base_hrs" value="10"></div>
+      </div>
+      <div class="info-box" style="margin-top:10px;">
+        หักตามนาทีจริง (ไม่ปัดเศษ): สูตร = (เงินเดือน ÷ วันในเดือน ÷ ฐานเวลา ÷ 60) × นาทีสาย <br>
+        เช่น 12000บ. ÷ 30วัน ÷ 10ชม. ÷ 60 = 0.67บ./นาที | สาย 35 นาที หัก 35 × 0.67 = 23.45 บาท
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="tag tag-football">⚽ สนามบอล</span> &nbsp;Football Late — Special Mode</div>
+      <div class="grid">
+        <div class="field"><label>เวลาเข้างาน (น.)</label><input type="text" id="late_fb_shift" value="14:00"></div>
+        <div class="field"><label>ผ่อนผันปกติ (นาที)</label><input type="number" id="late_fb_grace" value="10"></div>
+        <div class="field"><label>หักต่อรอบ (บาท)</label><input type="number" id="late_fb_per_block" value="40"></div>
+        <div class="field"><label>ขนาดรอบ (นาที)</label><input type="number" id="late_fb_block_min" value="60"></div>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:.85rem;font-weight:600;color:var(--muted);margin-bottom:10px">🛡️ โหมดอนุโลมพิเศษ</div>
+      <div class="two-col">
+        <div class="field"><label>เข้าได้ถึง (น.) โดยไม่หัก</label><input type="text" id="late_fb_allow_until" value="15:00"></div>
+        <div class="field"><label>ฐานย้อนนับค่าหัก (น.)</label><input type="text" id="late_fb_anchor" value="14:00"></div>
+      </div>
+      <div class="info-box">
+        เข้าได้ก่อน 15:00 = ไม่หัก &nbsp;|&nbsp; เกิน 15:00 → ย้อนนับหักจาก 14:00<br>
+        ตัวอย่าง: 15:01-16:00 = หัก 80 &nbsp;|&nbsp; 16:01-17:00 = หัก 120
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="tag tag-general">💳 ทั่วไปรายวัน</span> &nbsp;General Daily Late</div>
+      <div class="three-col">
+        <div class="field"><label>ผ่อนผัน (นาที)</label><input type="number" id="late_gen_grace" value="10"></div>
+        <div class="field"><label>ปัดเศษ</label>
+          <select id="late_gen_round"><option value="half" selected>30 นาที</option><option value="hour">1 ชั่วโมง</option></select></div>
+        <div class="field"><label>อัตราหักต่อ 30 นาที (บาท)</label><input type="number" id="late_gen_rate" value="40"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="tag tag-monthly">📅 รายเดือน</span> &nbsp;Monthly Late</div>
+      <div class="two-col">
+        <div class="field"><label>ผ่อนผัน (นาที)</label><input type="number" id="late_monthly_grace" value="10"></div>
+        <div class="field"><label>ปัดเศษ</label>
+          <select id="late_monthly_round"><option value="half" selected>30 นาที</option><option value="hour">1 ชม.</option></select></div>
+      </div>
+      <div class="info-box">อัตรา = (เงินเดือน ÷ วันในเดือน) ÷ ชั่วโมงทำงาน/วัน</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🕐 พาร์ทไทม์ Late</div>
+      <div class="two-col">
+        <div class="field"><label>ผ่อนผัน (นาที)</label><input type="number" id="late_pt_grace" value="10"></div>
+        <div class="field"><label>ปัดเศษ</label>
+          <select id="late_pt_round"><option value="hour" selected>ปัดขึ้นเต็มชม.</option><option value="half">30 นาที</option></select></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: DYNAMIC SHIFT -->
+  <div id="tab-dynamic" class="section">
+    <div class="section-title">🔄 กฎสลับกะ / เปลี่ยนอัตรา</div>
+    <div class="card">
+      <div class="card-title">🔁 Dynamic Shift Detection</div>
+      <div class="two-col">
+        <div class="field"><label>Candidate Shifts (เวลา คั่นด้วย ,)</label><input type="text" id="ds_candidates" value="10, 15, 17"></div>
+        <div class="field"><label>กลุ่มที่ล็อกไม่สลับ (คั่นด้วย ,)</label><input type="text" id="ds_locked" value="kitchen, football, looknum"></div>
+      </div>
+      <div class="info-box">ระบบดักกะจากเวลาเข้าจริง เพื่อปรับสิทธิ์ OT อัตโนมัติ (ยกเว้นกลุ่มที่ล็อก)</div>
+    </div>
+    <div class="card">
+      <div class="card-title">⬇️ กฎลดอัตราเป็นพาร์ทไทม์ (Override)</div>
+      <div class="grid">
+        <div class="field"><label>เข้างาน >= เวลานี้ → เรท PT (น.)</label><input type="text" id="ds_late_in" value="16:30"></div>
+        <div class="field"><label>ออกก่อนเวลานี้ → เรท PT (น.)</label><input type="text" id="ds_early_out" value="18:00"></div>
+        <div class="field"><label>อัตรา PT Override (บาท/วัน)</label><input type="number" id="ds_pt_rate" value="240"></div>
+        <div class="field"><label>ริบสิทธิ์ OT ด้วยหรือไม่?</label>
+          <select id="ds_strip_ot"><option value="yes" selected>ใช่ ริบ OT</option><option value="no">ไม่ริบ</option></select></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🕐 ออกก่อนเวลา (Early Checkout Detection)</div>
+      <div class="grid">
+        <div class="field"><label>Tolerance พนักงานรายวัน/เดือน (นาที)</label><input type="number" id="ec_fulltime_tol" value="30" min="0" max="120"></div>
+        <div class="field"><label>Tolerance PT กะเย็น (นาที)</label><input type="number" id="ec_pt_tol" value="120" min="0" max="300"></div>
+        <div class="field"><label>อัตราสลับกะ 17:00 สำหรับ Fulltime (บาท)</label><input type="number" id="ec_swap17_rate" value="240"></div>
+      </div>
+      <div class="info-box">
+        <strong>พนักงานรายวัน/เดือน:</strong> ออกก่อน ±Tolerance จากเวลาเลิกกะ → คิดตามชั่วโมงจริง | ออกใกล้ 17:00 → สลับกะ PT<br>
+        <strong>PT กะเย็น:</strong> ออกก่อน ±Tolerance จากเวลาเลิกกะ → คิดตามชั่วโมงจริง | ไม่เกิน Tolerance = ได้เงินเต็ม
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🤖 ร้านปิดก่อน (Shop Closed AI Detection)</div>
+      <div class="grid">
+        <div class="field"><label>พนักงานออกพร้อมกัน (ขั้นต่ำกี่คน)</label><input type="number" id="shop_ai_min_workers" value="2" min="1" max="10"></div>
+        <div class="field"><label>ระยะห่างเวลาออก (≤ ชม. ถือว่ากลุ่มเดียวกัน)</label><input type="number" id="shop_ai_time_spread" value="1.5" step="0.5" min="0"></div>
+        <div class="field"><label>ออกก่อนเวลาเลิกอย่างน้อย (≧ ชม.) AI ถึงทำแาน</label><input type="number" id="shop_ai_early_hrs" value="1.0" step="0.5" min="0"></div>
+      </div>
+      <div class="info-box">
+        <strong>Herd Detection:</strong> ถ้าระบบพบว่าคนกลุ่มเดียวกันเลิกงานไล่เลี่ยกันตามเกณฑ์นี้ จะเปิดโหมด "ร้านปิดก่อน" ให้อัตโนมัติ (ไม่หักแบบชั่วโมงจริง แต่จ่ายเต็มวัน) แอดมินสามารถเปิด/ปิดได้ด้วยปุ่ม 🌙 ท้ายโน้ต
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">☀️ Part-Time มาแทนกะเช้า (Morning Replacement)</div>
+      <div class="grid">
+        <div class="field"><label>เข้าก่อน (น.) = ถือเป็นกะเช้า</label><input type="text" id="ds_pt_morning_cutoff" value="12:00"></div>
+        <div class="field"><label>อัตราพิเศษ (บาท/วัน)</label><input type="number" id="ds_pt_morning_rate" value="350"></div>
+        <div class="field"><label>ชม.ฐานคำนวณ (หารค่าแรง)</label><input type="number" id="ds_pt_morning_hrs" value="11"></div>
+        <div class="field"><label>เลิกกะขั้นต่ำ (น.) ถึงได้เต็ม</label><input type="text" id="ds_pt_morning_end" value="21:00"></div>
+        <div class="field"><label>รหัสพนักงาน PT ที่ใช้กฎนี้ (,)</label><input type="text" id="ds_pt_morning_ids" value="7,10,11,12,17,23"></div>
+      </div>
+      <div class="info-box">PT เข้าก่อน 12:00 → อัตรา 350 บ. + OT กะเช้า | ออกก่อน 21:00 → คิดตาม (350 ÷ 11) × ชม.จริง</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🧹 กฎแม่บ้าน / ทำความสะอาด (Cleaner Special Rules)</div>
+      <div class="grid">
+        <div class="field"><label>รหัสพนักงานที่ใช้กฎนี้ (คั่นด้วย ,)</label><input type="text" id="cl_ids" value="21"></div>
+        <div class="field"><label>ค่าแรงวันอาทิตย์ (บาท/วัน)</label><input type="number" id="cl_sunday_rate" value="190"></div>
+        <div class="field"><label>ออกก่อนเวลานี้ → หักรายชม. (น.)</label><input type="text" id="cl_early_out" value="17:00"></div>
+        <div class="field"><label>ชั่วโมงฐาน (สำหรับหารค่าแรง)</label><input type="number" id="cl_base_hrs" value="9"></div>
+      </div>
+      <div class="info-box">วันอาทิตย์ถ้ามาทำงานจะได้ค่าแรงเหมา 190 บาท / วันทำงานปกติถ้าออกก่อน 17:00 จะคิดค่าแรง = (ชั่วโมงทำงาน × อัตราค่าแรงต่อชั่วโมง)</div>
+    </div>
+  </div>
+
+  <!-- TAB 5: EMPLOYEES -->
+  <div id="tab-employees" class="section">
+    <div class="section-title">👥 ข้อมูลพนักงาน</div>
+
+    <!-- DEPT MANAGER CARD -->
+    <details class="card" style="margin-bottom:14px">
+      <summary style="cursor:pointer;font-weight:700;font-size:.95rem;color:#0f172a;list-style:none;display:flex;align-items:center;justify-content:space-between">
+        <span>🏷️ จัดการแผนก</span>
+        <span style="font-size:.78rem;color:var(--muted);font-weight:400">คลิกเพื่อเปิด/ปิด ▾</span>
+      </summary>
+      <div style="margin-top:14px">
+        <div class="info-box" style="margin-bottom:12px">📌 แผนกใช้เพื่อ <strong>จัดกลุ่มและกรองข้อมูล</strong> เท่านั้น ไม่กระทบการคำนวณ — กฎคำนวณจริงอยู่ที่คอลัมน์ <strong>OT กลุ่ม</strong> และ <strong>สาย กลุ่ม</strong></div>
+        <div class="tbl-wrap">
+          <table class="data-table">
+            <thead><tr><th style="width:130px">ID (ภายใน)</th><th>ชื่อแผนก (ใส่ emoji ได้ เช่น 🍳 ครัว)</th><th style="width:60px"></th></tr></thead>
+            <tbody id="dept-manager-list"></tbody>
+          </table>
+        </div>
+        <button class="add-btn" onclick="addDept()" style="margin-top:10px">+ เพิ่มแผนก</button>
+      </div>
+    </details>
+
+    <div class="info-box" style="margin-bottom:14px">กดปุ่มแผนกด้านล่างเพื่อ Filter พนักงานตามแผนก</div>
+    <div class="dept-filter-bar" id="dept-filter-bar"></div>
+    <div class="card">
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>ชื่อ</th><th>ประเภท</th><th>แผนก 🏷️</th><th>Shift ID</th><th>บาท/วัน</th><th>บาท/เดือน</th><th>ชม./วัน</th><th>OT กลุ่ม</th><th>สาย กลุ่ม</th><th></th></tr></thead>
+          <tbody id="emp-list"></tbody>
+        </table>
+      </div>
+      <button class="add-btn" onclick="addEmployee()">+ เพิ่มพนักงาน</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="payroll_settings.js"></script>
+</body>
+</html>

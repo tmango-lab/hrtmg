@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>💰 ระบบคำนวณเงินเดือน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f9fa;--surface:#ffffff;--surface2:#ffffff;--border:#e2e8f0;
+  --accent:#22c55e;--accent2:#16a34a;--green:#22c55e;--red:#ef4444;
+  --yellow:#f59e0b;--blue:#3b82f6;--text:#1e293b;--muted:#64748b;
+  --card-shadow:0 1px 3px rgba(0,0,0,0.05);
+}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+/* ── Header ── */
+.header{background:#ffffff;border-bottom:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 2px rgba(0,0,0,0.02)}
+.header h1{font-size:1.4rem;font-weight:700;color:#0f172a}
+.header .subtitle{font-size:.85rem;color:var(--muted);margin-top:2px}
+.grand-total{background:var(--green);padding:10px 20px;border-radius:6px;text-align:right;box-shadow:0 2px 4px rgba(34,197,94,0.15)}
+.grand-total .label{font-size:.75rem;color:rgba(255,255,255,.9)}
+.grand-total .amount{font-size:1.5rem;font-weight:700;color:#fff}
+/* ── Toolbar ── */
+.toolbar{padding:16px 32px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--border);background:#ffffff}
+.search-box{flex:1;min-width:200px;background:#f8f9fa;border:1px solid var(--border);border-radius:6px;padding:8px 14px;color:var(--text);font-family:inherit;font-size:.9rem}
+.search-box:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 2px rgba(34,197,94,0.2)}
+.btn{padding:8px 16px;border-radius:6px;border:1px solid transparent;cursor:pointer;font-family:inherit;font-size:.85rem;font-weight:500;transition:.2s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2)}
+.btn-success{background:var(--green);color:#fff}
+.btn-success:hover{background:#16a34a}
+.btn-outline{background:#fff;border-color:var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+/* ── Summary bar ── */
+.summary-bar{display:flex;gap:12px;padding:16px 32px;overflow-x:auto;background:#ffffff;border-bottom:1px solid var(--border)}
+.summary-card{background:#ffffff;border:1px solid var(--border);border-radius:6px;padding:12px 18px;min-width:150px;flex-shrink:0;box-shadow:var(--card-shadow)}
+.summary-card .s-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.summary-card .s-value{font-size:1.1rem;font-weight:700;margin-top:4px}
+.s-green{color:var(--green)}.s-red{color:var(--red)}.s-blue{color:var(--blue)}.s-purple{color:#8b5cf6}
+/* ── Main ── */
+.main{padding:24px 32px;display:flex;flex-direction:column;gap:16px;padding-bottom:100px}
+/* ── Employee Card ── */
+.emp-card{background:#ffffff;border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:.2s;box-shadow:var(--card-shadow)}
+.emp-card:hover{border-color:var(--accent);box-shadow:0 4px 12px rgba(0,0,0,0.05)}
+.emp-header{padding:14px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;user-select:none}
+.emp-header:hover{background:#f8f9fa}
+.emp-avatar{width:42px;height:42px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;flex-shrink:0}
+.emp-info{flex:1}
+.emp-name{font-size:1rem;font-weight:600;color:#0f172a}
+.emp-meta{font-size:.8rem;color:var(--muted);margin-top:2px}
+.emp-chips{display:flex;gap:8px;align-items:center;flex:none;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+.chip{padding:4px 10px;border-radius:20px;font-size:.82rem;font-weight:500;border:1px solid transparent;text-align:center;white-space:nowrap}
+.chip-base{background:#f0f9ff;color:var(--blue);border-color:#e0f2fe}
+.chip-ot{background:#f0fdf4;color:var(--green);border-color:#dcfce7}
+.chip-deduct{background:#fef2f2;color:var(--red);border-color:#fee2e2}
+.chip-advance{background:#fefce8;color:var(--yellow);border-color:#fef08a}
+.chip-total{background:#f5f3ff;color:#8b5cf6;border-color:#ede9fe;font-weight:700;font-size:.85rem}
+.emp-toggle{color:var(--muted);transition:.3s;font-size:1.2rem;width:24px;text-align:center}
+.emp-body{display:none;border-top:1px solid var(--border)}
+.emp-body.open{display:block}
+/* ── Table ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+thead th{background:#f8f9fa;padding:10px 14px;text-align:right;color:var(--muted);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;border-bottom:1px solid var(--border)}
+thead th:first-child,thead th:nth-child(2),thead th:nth-child(3),thead th:nth-child(4){text-align:left}
+tbody tr{border-bottom:1px solid var(--border);transition:.15s}
+tbody tr:hover{background:#f8f9fa}
+td{padding:9px 14px;white-space:nowrap;text-align:right;color:#0f172a}
+td:first-child,td:nth-child(2),td:nth-child(3),td:nth-child(4){text-align:left}
+.td-date{color:var(--muted);font-size:.82rem}
+.td-time{color:#0f172a}
+.td-late{color:var(--yellow)}
+/* Editable cells */
+.editable{cursor:text;border-radius:4px;padding:4px 8px;min-width:72px;display:inline-block;border:1px solid transparent;transition:.2s;font-family:inherit;font-size:.85rem}
+.editable:hover{border-color:var(--border);background:#f8f9fa}
+.editable:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 2px rgba(34,197,94,0.2)}
+.editable.modified{background:#f0fdf4;border-color:var(--green);color:var(--green)}
+.td-ot .editable{color:var(--green)}
+.td-deduct .editable{color:var(--red)}
+.td-net{font-weight:600;color:#8b5cf6}
+.note-cell{color:var(--muted);font-size:.78rem;max-width:200px;text-overflow:ellipsis}
+.ot-check{accent-color:var(--green);width:14px;height:14px;cursor:pointer;vertical-align:middle;margin-right:4px}
+.ot-label{display:inline-flex;align-items:center;cursor:pointer;user-select:none;color:#0f172a}
+/* Footer row */
+.tfoot-row td{background:#f8f9fa;font-weight:700;border-top:2px solid var(--border);color:#0f172a}
+.tfoot-row .total-net{color:#8b5cf6;font-size:1rem}
+/* Reset btn */
+.reset-btn{font-size:.72rem;padding:2px 8px;border-radius:4px;background:#fff;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:inherit;margin-left:8px}
+.reset-btn:hover{border-color:var(--red);color:var(--red)}
+/* Settings Sidebar */
+.sidebar-overlay {position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);display:none;justify-content:flex-end;z-index:1000;backdrop-filter:blur(2px)}
+.sidebar-overlay.show {display:flex}
+.sidebar-content {background:#fff;width:90%;max-width:780px;height:100vh;display:flex;flex-direction:column;box-shadow:-5px 0 25px rgba(0,0,0,0.1);animation:slideLeft 0.3s ease}
+.sidebar-content .modal-footer {border-radius:0}
+@keyframes slideLeft { 0% {transform:translateX(100%)} 100% {transform:translateX(0)} }
+/* General Modal */
+.modal-overlay {position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(2px)}
+.modal-overlay.show {display:flex}
+.modal-content {background:#fff;border-radius:8px;width:90%;max-width:800px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 10px 25px rgba(0,0,0,0.1)}
+.modal-header {padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.modal-header h2 {font-size:1.2rem;color:#0f172a}
+.modal-close {cursor:pointer;font-size:1.5rem;color:var(--muted);background:none;border:none}
+.modal-body {padding:20px 24px;overflow-y:auto;flex:1}
+.modal-footer {padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:12px;background:#f8f9fa;border-radius:0 0 8px 8px}
+.settings-table {width:100%;border-collapse:collapse}
+.settings-table th, .settings-table td {padding:10px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.settings-table th {background:#f8f9fa;font-weight:600;color:var(--muted);font-size:.8rem;text-transform:uppercase}
+.setup-input {padding:6px 10px;border:1px solid var(--border);border-radius:4px;width:100%;font-family:inherit;font-size:.9rem}
+.setup-input:focus {outline:none;border-color:var(--accent)}
+
+/* Calendar Grid */
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 10px; }
+.cal-day { border: 1px solid var(--border); border-radius: 6px; padding: 12px 0; text-align: center; cursor: pointer; user-select: none; transition: 0.2s; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.cal-day:hover { border-color: var(--blue); }
+.cal-day.active { background: #eff6ff; border-color: var(--blue); color: var(--blue); }
+.cal-day.active .cal-num { font-weight: 700; }
+.cal-num { font-size: 1.1rem; }
+.cal-label { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+.cal-day.active .cal-label { color: var(--blue); }
+
+/* Toast */
+#toast{position:fixed;bottom:24px;right:24px;background:#22c55e;color:#fff;padding:12px 20px;border-radius:6px;font-size:.9rem;font-weight:500;transform:translateY(80px);opacity:0;transition:.3s;z-index:999;box-shadow:0 4px 12px rgba(34,197,94,0.2)}
+#toast.show{transform:translateY(0);opacity:1}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <h1>💰 ระบบคำนวณเงินเดือน</h1>
+    <div class="subtitle" id="header-subtitle">กำลังโหลด...</div>
+  </div>
+  <div class="grand-total">
+    <div class="label">รวมเงินเดือนทั้งหมด</div>
+    <div class="amount" id="grand-total">฿0</div>
+  </div>
+</div>
+
+<div class="toolbar" style="justify-content: space-between;">
+  <div style="display:flex; gap:10px; flex:1; min-width:250px;">
+    <input class="search-box" id="search" type="text" placeholder="🔍 ค้นหาชื่อพนักงาน...">
+    <button class="btn btn-outline" onclick="expandAll()">ขยายทั้งหมด</button>
+    <button class="btn btn-outline" onclick="collapseAll()">ย่อทั้งหมด</button>
+  </div>
+  
+  <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+    <!-- System & Backup -->
+    <button class="btn btn-outline" onclick="exportBackup()" style="border-color:var(--yellow);color:var(--yellow)" title="สำรองข้อมูลทั้งหมดของเดือนนี้">📤 Backup</button>
+    <input type="file" id="backup-upload" accept=".json" style="display: none;" onchange="handleBackupUpload(event)">
+    <button class="btn btn-outline" onclick="document.getElementById('backup-upload').click()" style="border-color:var(--yellow);color:var(--yellow)" title="เรียกคืนข้อมูลจากไฟล์ Backup">📥 Restore</button>
+    <div style="width:1px; height:24px; background:var(--border); margin:0 4px;"></div>
+
+    <!-- Main Actions -->
+    <input type="file" id="csv-upload" accept=".csv" style="display: none;" onchange="handleCSVUpload(event)">
+    <button class="btn btn-primary" onclick="document.getElementById('csv-upload').click()">📁 อัปโหลด CSV <span style="font-size:0.8rem; font-weight:normal; opacity:0.9;">(สแกนนิ้ว)</span></button>
+    <button class="btn btn-success" onclick="exportCSV()">📥 ส่งออก Excel</button>
+    <button class="btn btn-outline" onclick="window.print()">🖨️ พิมพ์</button>
+    <div style="width:1px; height:24px; background:var(--border); margin:0 4px;"></div>
+
+    <!-- Admin & Reset -->
+    <a href="payroll_settings.html" class="btn btn-outline" style="border-color:#8b5cf6;color:#8b5cf6;text-decoration:none">⚙️ ตั้งค่าระบบ</a>
+    <button class="btn btn-outline" onclick="resetAll()" style="color:var(--red); border-color:var(--red);" title="ลบข้อมูลการแก้ไขมือทั้งหมด">🔄 รีเซตข้อมูล</button>
+  </div>
+</div>
+
+<div class="summary-bar" id="summary-bar"></div>
+<div class="main" id="main"></div>
+<!-- Calendar Modal -->
+<div class="modal-overlay" id="calendar-modal" onclick="if(event.target===this)closeCalendarModal()">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h2 style="display:flex; align-items:center; gap:8px;">🗓️ จัดการวันหยุด (<span id="cal-emp-name"></span>) <span id="cal-month" style="font-size:0.85rem; color:var(--blue); font-weight:normal; background:#eff6ff; padding:2px 8px; border-radius:12px; border:1px solid #bfdbfe;"></span></h2>
+      <button class="modal-close" onclick="closeCalendarModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem; color:var(--muted); margin-bottom: 12px;">คลิกเลือกวันที่เป็นวันหยุดพักผ่อนสำหรับเดือนนี้ (พนักงานจะได้ค่าแรงเต็มจำนวนในวันที่เลือก)</p>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeCalendarModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveCalendarModal()">บันทึกวันหยุด</button>
+    </div>
+  </div>
+</div>
+
+<!-- Advance Modal -->
+<div class="modal-overlay" id="advance-modal" onclick="if(event.target===this)closeAdvanceModal()">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h2>💸 บันทึกเบิกเงิน (<span id="adv-emp-name"></span>)</h2>
+      <button class="modal-close" onclick="closeAdvanceModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem; color:var(--muted); margin-bottom: 8px;">
+        ยอดเงินสุทธิที่เบิกได้ตอนนี้: <strong style="color:var(--green);font-size:1.1rem" id="adv-max-amount">฿0</strong>
+      </p>
+      <div style="display:flex; gap:8px; margin-bottom:16px; align-items:flex-end">
+        <div style="flex:1">
+          <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">วันที่เบิก <span style="font-size:0.65rem;font-weight:normal">(วว/ดด/ปป)</span></label>
+          <div style="position:relative;">
+            <input type="text" id="adv-date-display" class="setup-input" readonly style="cursor:pointer; background:#fff; text-align:center;" onclick="document.getElementById('adv-date').showPicker()">
+            <input type="date" id="adv-date" style="position:absolute; width:0; height:0; opacity:0; pointer-events:none;" onchange="
+              if(this.value) { 
+                const [y,m,d] = this.value.split('-'); 
+                document.getElementById('adv-date-display').value = `${d}/${m}/${y}`; 
+              } else {
+                document.getElementById('adv-date-display').value = '';
+              }
+            ">
+          </div>
+        </div>
+        <div style="flex:1">
+          <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">จำนวนเงิน (บาท)</label>
+          <input type="number" id="adv-amount" class="setup-input" placeholder="0">
+        </div>
+        <div style="flex:2">
+          <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">หัวข้อ / หมายเหตุ</label>
+          <input type="text" id="adv-note" class="setup-input" placeholder="เช่น เบิกค่ารถ...">
+        </div>
+        <button class="btn btn-primary" onclick="addAdvance()">➕ เพิ่ม</button>
+      </div>
+      
+      <table class="settings-table">
+        <thead>
+          <tr>
+            <th style="width:100px">วันที่เบิก</th>
+            <th>หมายเหตุ</th>
+            <th style="width:100px">จำนวนเงิน</th>
+            <th style="width:60px;text-align:center">ลบ</th>
+          </tr>
+        </thead>
+        <tbody id="adv-list-tbody">
+          <!-- Advance rows will go here -->
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAdvanceModal()">เสร็จสิ้น / ปิดหน้าต่าง</button>
+    </div>
+  </div>
+</div>
+
+<!-- Errand Modal -->
+<div class="modal-overlay" id="errand-modal" onclick="if(event.target===this)closeErrandModal()">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h2>🏃 บันทึกธุระ (<span id="err-emp-name"></span>)</h2>
+      <button class="modal-close" onclick="closeErrandModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem; color:var(--muted); margin-bottom: 8px;">
+        ระบบจะคำนวณยอดหักรายนาทีจากฐานค่าแรง/เงินเดือนให้โดยอัตโนมัติ
+      </p>
+      <div style="display:flex; gap:8px; margin-bottom:16px; align-items:flex-end">
+        <div style="flex:1">
+          <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">วันที่ <span style="font-size:0.65rem;font-weight:normal">(วว/ดด/ปป)</span></label>
+          <div style="position:relative;">
+            <input type="text" id="err-date-display" class="setup-input" readonly style="cursor:pointer; background:#fff; text-align:center;" onclick="document.getElementById('err-date').showPicker()">
+            <input type="date" id="err-date" style="position:absolute; width:0; height:0; opacity:0; pointer-events:none;" onchange="
+              if(this.value) { 
+                const [y,m,d] = this.value.split('-'); 
+                document.getElementById('err-date-display').value = `${d}/${m}/${y}`; 
+              } else {
+                document.getElementById('err-date-display').value = '';
+              }
+            ">
+          </div>
+        </div>
+        <div style="width:80px">
+          <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">ออก (น.)</label>
+          <input type="text" id="err-start" class="setup-input" placeholder="8.00" onblur="calcErrand()" onkeydown="if(event.key==='Enter')calcErrand()">
+        </div>
+        <div style="width:80px">
+          <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">เข้า (น.)</label>
+          <input type="text" id="err-end" class="setup-input" placeholder="9.00" onblur="calcErrand()" onkeydown="if(event.key==='Enter')calcErrand()">
+        </div>
+        <div style="width:110px">
+          <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">หักเงิน (บ.) <span id="err-mins-lbl" style="font-size:0.7rem;color:var(--blue)"></span></label>
+          <input type="number" id="err-amount" class="setup-input" placeholder="0">
+        </div>
+        <button class="btn btn-primary" onclick="addErrand()">➕ บันทึก</button>
+      </div>
+      
+      <table class="settings-table">
+        <thead>
+          <tr>
+            <th style="width:100px">วันที่</th>
+            <th>ช่วงเวลา (นาที)</th>
+            <th style="width:100px;text-align:right">ยอดหัก</th>
+            <th style="width:60px;text-align:center">ลบ</th>
+          </tr>
+        </thead>
+        <tbody id="err-list-tbody">
+          <!-- Errand rows will go here -->
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeErrandModal()">เสร็จสิ้น / ปิดหน้าต่าง</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+
+
+<script>
+
+const EMP_NAMES = {"1":"JET","2":"Mild","3":"Mameaw","4":"Bird","5":"Ploysai","6":"Chompoo","7":"Mint","8":"Looknum","9":"Aum","10":"Pluem","11":"Jay","12":"Cream","13":"Jui","14":"Noi","15":"Wave","16":"Amp","17":"Ple","18":"YUNG","19":"TAE","20":"Ple FB","21":"TUKTA","22":"Jeab","23":"ManU"};
+let SHIFT = {"1":{"t":"รายวัน","d":380,"mo":0,"ss":14,"dout":24,"hrs":10,"ot":"football","lt":"football"},"2":{"t":"รายวัน","d":380,"mo":0,"ss":10,"dout":21,"hrs":11,"ot":"morning","lt":null},"3":{"t":"รายเดือน","d":0,"mo":11000,"ss":10,"dout":21,"hrs":11,"ot":"morning","lt":null},"4":{"t":"รายเดือน","d":0,"mo":11000,"ss":10,"dout":21,"hrs":11,"ot":"morning","lt":null},"5":{"t":"รายวัน","d":380,"mo":0,"ss":15,"dout":2,"hrs":10,"ot":null,"lt":null},"6":{"t":"รายเดือน","d":0,"mo":12000,"ss":10,"dout":20,"hrs":10,"ot":null,"lt":"office"},"7":{"t":"พาร์ทไทม์","d":240,"mo":0,"ss":17,"dout":24,"hrs":7,"ot":null,"lt":null},"8":{"t":"รายเดือน","d":0,"mo":12000,"ss":10,"dout":20,"hrs":10,"ot":"looknum","lt":"office"},"9":{"t":"รายเดือน","d":0,"mo":11000,"ss":10,"dout":21,"hrs":11,"ot":"morning","lt":null},"10":{"t":"พาร์ทไทม์","d":240,"mo":0,"ss":17,"dout":24,"hrs":7,"ot":null,"lt":null},"11":{"t":"พาร์ทไทม์","d":240,"mo":0,"ss":17,"dout":24,"hrs":7,"ot":null,"lt":null},"12":{"t":"พาร์ทไทม์","d":240,"mo":0,"ss":17,"dout":24,"hrs":7,"ot":null,"lt":null},"13":{"t":"รายวัน","d":700,"mo":0,"ss":10,"dout":22,"hrs":12,"ot":"kitchen","lt":null},"14":{"t":"รายวัน","d":700,"mo":0,"ss":10,"dout":22,"hrs":12,"ot":"kitchen","lt":null},"15":{"t":"รายเดือน","d":0,"mo":11000,"ss":15,"dout":2,"hrs":10,"ot":null,"lt":null},"16":{"t":"รายวัน","d":550,"mo":0,"ss":10,"dout":22,"hrs":12,"ot":"kitchen","lt":null},"17":{"t":"พาร์ทไทม์","d":240,"mo":0,"ss":17,"dout":24,"hrs":7,"ot":null,"lt":null},"18":{"t":"รายวัน","d":400,"mo":0,"ss":14,"dout":24,"hrs":10,"ot":"football","lt":"football"},"19":{"t":"รายวัน","d":360,"mo":0,"ss":14,"dout":24,"hrs":10,"ot":"football","lt":"football"},"20":{"t":"รายวัน","d":240,"mo":0,"ss":17,"dout":24,"hrs":7,"ot":null,"lt":null},"21":{"t":"รายวัน","d":380,"mo":0,"ss":8,"dout":17,"hrs":9,"ot":null,"lt":null},"22":{"t":"รายวัน","d":450,"mo":0,"ss":10,"dout":22,"hrs":12,"ot":"kitchen","lt":null},"23":{"t":"พาร์ทไทม์","d":240,"mo":0,"ss":17,"dout":24,"hrs":7,"ot":null,"lt":null}};
+let DEPT_RULES = {"looknum":{"type":"after","time":20,"cutoff":21.1666,"rate":40,"reqApprove":true},"morning":{"type":"after","time":21,"cutoff":21.3333,"rate":40,"reqApprove":true},"morning_pt":{"type":"after","time":21,"cutoff":21.3333,"rate":40,"reqApprove":true},"kitchen":{"type":"before","time":10,"cutoff":null,"rate":50,"reqApprove":true},"football":{"type":"before","time":14,"cutoff":null,"rate":40,"reqApprove":true}};
+let RAW_PUNCHES = {"1":[{"date":"2026-03-01","cin":"14:04","cout":"21:57","lateM":0},{"date":"2026-03-02","cin":"15:02","cout":"00:20","lateM":0},{"date":"2026-03-03","cin":"15:08","cout":"23:54","lateM":0},{"date":"2026-03-04","cin":"","cout":"","lateM":0},{"date":"2026-03-05","cin":"15:02","cout":"22:55","lateM":0},{"date":"2026-03-06","cin":"","cout":"","lateM":0},{"date":"2026-03-07","cin":"14:03","cout":"00:54","lateM":0},{"date":"2026-03-08","cin":"14:08","cout":"21:54","lateM":0},{"date":"2026-03-09","cin":"14:07","cout":"02:00","lateM":0},{"date":"2026-03-10","cin":"14:07","cout":"23:08","lateM":0},{"date":"2026-03-11","cin":"15:51","cout":"23:09","lateM":51},{"date":"2026-03-12","cin":"15:00","cout":"23:52","lateM":0},{"date":"2026-03-13","cin":"","cout":"","lateM":0},{"date":"2026-03-14","cin":"14:02","cout":"22:47","lateM":0},{"date":"2026-03-15","cin":"","cout":"","lateM":0},{"date":"2026-03-16","cin":"14:02","cout":"00:20","lateM":0},{"date":"2026-03-17","cin":"14:00","cout":"23:42","lateM":0},{"date":"2026-03-18","cin":"14:04","cout":"22:29","lateM":0},{"date":"2026-03-19","cin":"14:58","cout":"00:11","lateM":0},{"date":"2026-03-20","cin":"","cout":"","lateM":0},{"date":"2026-03-21","cin":"15:00","cout":"22:02","lateM":0},{"date":"2026-03-22","cin":"15:02","cout":"23:24","lateM":0},{"date":"2026-03-23","cin":"15:03","cout":"00:02","lateM":0},{"date":"2026-03-24","cin":"15:06","cout":"23:46","lateM":0},{"date":"2026-03-25","cin":"14:56","cout":"22:39","lateM":0},{"date":"2026-03-26","cin":"14:59","cout":"","lateM":0},{"date":"2026-03-27","cin":"","cout":"","lateM":0}],"2":[{"date":"2026-03-01","cin":"","cout":"","lateM":0},{"date":"2026-03-02","cin":"10:10","cout":"20:21","lateM":0},{"date":"2026-03-03","cin":"","cout":"","lateM":0},{"date":"2026-03-04","cin":"10:10","cout":"21:08","lateM":0},{"date":"2026-03-05","cin":"10:08","cout":"","lateM":0},{"date":"2026-03-06","cin":"10:10","cout":"19:49","lateM":0},{"date":"2026-03-07","cin":"10:10","cout":"21:04","lateM":0},{"date":"2026-03-08","cin":"","cout":"","lateM":0},{"date":"2026-03-09","cin":"10:28","cout":"22:33","lateM":28},{"date":"2026-03-10","cin":"10:10","cout":"","lateM":0},{"date":"2026-03-11","cin":"","cout":"","lateM":0},{"date":"2026-03-12","cin":"10:15","cout":"","lateM":0},{"date":"2026-03-13","cin":"10:10","cout":"","lateM":0},{"date":"2026-03-14","cin":"","cout":"","lateM":0},{"date":"2026-03-15","cin":"","cout":"","lateM":0},{"date":"2026-03-16","cin":"10:10","cout":"20:04","lateM":0},{"date":"2026-03-17","cin":"10:11","cout":"20:10","lateM":11},{"date":"2026-03-18","cin":"","cout":"","lateM":0},{"date":"2026-03-19","cin":"10:10","cout":"19:54","lateM":0},{"date":"2026-03-20","cin":"10:24","cout":"20:02","lateM":24},{"date":"2026-03-21","cin":"","cout":"","lateM":0},{"date":"2026-03-22","cin":"","cout":"","lateM":0},{"date":"2026-03-23","cin":"10:10","cout":"20:07","lateM":0},{"date":"2026-03-24","cin":"10:09","cout":"22:36","lateM":0},{"date":"2026-03-25","cin":"10:10","cout":"20:26","lateM":0},{"date":"2026-03-26","cin":"10:10","cout":"21:45","lateM":0},{"date":"2026-03-27","cin":"10:09","cout":"","lateM":0}],"3":[{"date":"2026-03-01","cin":"10:04","cout":"21:01","lateM":0},{"date":"2026-03-02","cin":"","cout":"","lateM":0},{"date":"2026-03-03","cin":"","cout":"","lateM":0},{"date":"2026-03-04","cin":"10:14","cout":"17:12","lateM":14},{"date":"2026-03-05","cin":"09:52","cout":"21:01","lateM":0},{"date":"2026-03-06","cin":"10:06","cout":"20:02","lateM":0},{"date":"2026-03-07","cin":"10:10","cout":"21:01","lateM":0},{"date":"2026-03-08","cin":"09:58","cout":"20:34","lateM":0},{"date":"2026-03-09","cin":"15:11","cout":"01:44","lateM":11},{"date":"2026-03-10","cin":"","cout":"","lateM":0},{"date":"2026-03-11","cin":"10:14","cout":"20:02","lateM":14},{"date":"2026-03-12","cin":"09:52","cout":"21:01","lateM":0},{"date":"2026-03-13","cin":"10:02","cout":"22:41","lateM":0},{"date":"2026-03-14","cin":"10:00","cout":"21:04","lateM":0},{"date":"2026-03-15","cin":"","cout":"","lateM":0},{"date":"2026-03-16","cin":"15:18","cout":"23:41","lateM":18},{"date":"2026-03-17","cin":"","cout":"","lateM":0},{"date":"2026-03-18","cin":"09:50","cout":"20:07","lateM":0},{"date":"2026-03-19","cin":"09:48","cout":"","lateM":0},{"date":"2026-03-20","cin":"09:59","cout":"21:36","lateM":0},{"date":"2026-03-21","cin":"10:00","cout":"","lateM":0},{"date":"2026-03-22","cin":"10:04","cout":"21:29","lateM":0},{"date":"2026-03-23","cin":"15:14","cout":"23:17","lateM":14},{"date":"2026-03-24","cin":"","cout":"","lateM":0},{"date":"2026-03-25","cin":"10:03","cout":"21:13","lateM":0},{"date":"2026-03-26","cin":"10:14","cout":"21:54","lateM":14},{"date":"2026-03-27","cin":"10:13","cout":"","lateM":0}],"4":[{"date":"2026-03-01","cin":"10:04","cout":"21:04","lateM":0},{"date":"2026-03-02","cin":"10:32","cout":"20:17","lateM":32},{"date":"2026-03-03","cin":"10:10","cout":"20:07","lateM":0},{"date":"2026-03-04","cin":"14:38","cout":"00:44","lateM":0},{"date":"2026-03-05","cin":"10:07","cout":"21:07","lateM":0},{"date":"2026-03-06","cin":"","cout":"","lateM":0},{"date":"2026-03-07","cin":"","cout":"","lateM":0},{"date":"2026-03-08","cin":"10:15","cout":"20:38","lateM":15},{"date":"2026-03-09","cin":"","cout":"","lateM":0},{"date":"2026-03-10","cin":"10:01","cout":"20:30","lateM":0},{"date":"2026-03-11","cin":"10:07","cout":"20:02","lateM":0},{"date":"2026-03-12","cin":"10:19","cout":"21:06","lateM":19},{"date":"2026-03-13","cin":"","cout":"","lateM":0},{"date":"2026-03-14","cin":"14:49","cout":"01:17","lateM":0},{"date":"2026-03-15","cin":"10:08","cout":"23:27","lateM":0},{"date":"2026-03-16","cin":"10:11","cout":"20:04","lateM":11},{"date":"2026-03-17","cin":"10:14","cout":"20:12","lateM":14},{"date":"2026-03-18","cin":"15:07","cout":"00:33","lateM":0},{"date":"2026-03-19","cin":"10:14","cout":"19:50","lateM":14},{"date":"2026-03-20","cin":"","cout":"","lateM":0},{"date":"2026-03-21","cin":"14:57","cout":"23:29","lateM":0},{"date":"2026-03-22","cin":"10:07","cout":"21:07","lateM":0},{"date":"2026-03-23","cin":"10:02","cout":"20:11","lateM":0},{"date":"2026-03-24","cin":"10:14","cout":"21:04","lateM":14},{"date":"2026-03-25","cin":"10:05","cout":"20:30","lateM":0},{"date":"2026-03-26","cin":"15:01","cout":"23:51","lateM":0},{"date":"2026-03-27","cin":"","cout":"","lateM":0}],"5":[{"date":"2026-03-01","cin":"15:13","cout":"23:15","lateM":13},{"date":"2026-03-02","cin":"15:07","cout":"23:46","lateM":0},{"date":"2026-03-03","cin":"","cout":"","lateM":0},{"date":"2026-03-04","cin":"15:04","cout":"00:40","lateM":0},{"date":"2026-03-05","cin":"","cout":"","lateM":0},{"date":"2026-03-06","cin":"15:03","cout":"23:19","lateM":0},{"date":"2026-03-07","cin":"10:14","cout":"","lateM":0},{"date":"2026-03-08","cin":"15:22","cout":"23:17","lateM":22},{"date":"2026-03-09","cin":"15:08","cout":"01:41","lateM":0},{"date":"2026-03-10","cin":"","cout":"","lateM":0},{"date":"2026-03-11","cin":"17:00","cout":"23:07","lateM":0},{"date":"2026-03-12","cin":"15:21","cout":"23:20","lateM":21},{"date":"2026-03-13","cin":"15:19","cout":"23:57","lateM":19},{"date":"2026-03-14","cin":"10:08","cout":"","lateM":0},{"date":"2026-03-15","cin":"","cout":"","lateM":0},{"date":"2026-03-16","cin":"15:09","cout":"23:08","lateM":0},{"date":"2026-03-17","cin":"","cout":"","lateM":0},{"date":"2026-03-18","cin":"15:25","cout":"00:33","lateM":25},{"date":"2026-03-19","cin":"15:21","cout":"22:49","lateM":21},{"date":"2026-03-20","cin":"16:55","cout":"23:13","lateM":115},{"date":"2026-03-21","cin":"10:05","cout":"21:01","lateM":0},{"date":"2026-03-22","cin":"15:42","cout":"22:37","lateM":42},{"date":"2026-03-23","cin":"15:19","cout":"23:27","lateM":19},{"date":"2026-03-24","cin":"","cout":"","lateM":0},{"date":"2026-03-25","cin":"","cout":"23:46","lateM":0},{"date":"2026-03-26","cin":"15:06","cout":"23:45","lateM":0},{"date":"2026-03-27","cin":"15:10","cout":"","lateM":0}],"6":[{"date":"2026-03-01","cin":"10:09","cout":"20:39","lateM":0},{"date":"2026-03-02","cin":"10:07","cout":"20:07","lateM":0},{"date":"2026-03-03","cin":"10:08","cout":"20:17","lateM":0},{"date":"2026-03-04","cin":"10:07","cout":"20:30","lateM":0},{"date":"2026-03-05","cin":"","cout":"","lateM":0},{"date":"2026-03-06","cin":"","cout":"","lateM":0},{"date":"2026-03-07","cin":"10:30","cout":"20:03","lateM":30},{"date":"2026-03-08","cin":"10:11","cout":"20:08","lateM":11},{"date":"2026-03-09","cin":"10:07","cout":"20:06","lateM":0},{"date":"2026-03-10","cin":"10:10","cout":"20:00","lateM":0},{"date":"2026-03-11","cin":"10:09","cout":"20:01","lateM":0},{"date":"2026-03-12","cin":"10:09","cout":"20:09","lateM":0},{"date":"2026-03-13","cin":"","cout":"","lateM":0},{"date":"2026-03-14","cin":"10:06","cout":"20:08","lateM":0},{"date":"2026-03-15","cin":"10:07","cout":"20:05","lateM":0},{"date":"2026-03-16","cin":"10:06","cout":"20:04","lateM":0},{"date":"2026-03-17","cin":"10:09","cout":"20:08","lateM":0},{"date":"2026-03-18","cin":"10:07","cout":"20:08","lateM":0},{"date":"2026-03-19","cin":"10:07","cout":"20:14","lateM":0},{"date":"2026-03-20","cin":"","cout":"","lateM":0},{"date":"2026-03-21","cin":"","cout":"","lateM":0},{"date":"2026-03-22","cin":"10:32","cout":"20:04","lateM":32},{"date":"2026-03-23","cin":"10:08","cout":"20:05","lateM":0},{"date":"2026-03-24","cin":"10:05","cout":"20:07","lateM":0},{"date":"2026-03-25","cin":"10:10","cout":"20:04","lateM":0},{"date":"2026-03-26","cin":"10:09","cout":"20:06","lateM":0},{"date":"2026-03-27","cin":"","cout":"","lateM":0}],"7":[{"date":"2026-03-01","cin":"","cout":"","lateM":0},{"date":"2026-03-02","cin":"","cout":"","lateM":0},{"date":"2026-03-03","cin":"17:01","cout":"23:17","lateM":0},{"date":"2026-03-04","cin":"16:42","cout":"00:44","lateM":0},{"date":"2026-03-05","cin":"","cout":"","lateM":0},{"date":"2026-03-06","cin":"17:04","cout":"23:19","lateM":0},{"date":"2026-03-07","cin":"16:55","cout":"00:20","lateM":0},{"date":"2026-03-08","cin":"","cout":"","lateM":0},{"date":"2026-03-09","cin":"10:07","cout":"22:50","lateM":0},{"date":"2026-03-10","cin":"16:58","cout":"23:58","lateM":0},{"date":"2026-03-11","cin":"","cout":"","lateM":0},{"date":"2026-03-12","cin":"","cout":"","lateM":0},{"date":"2026-03-13","cin":"16:53","cout":"00:00","lateM":0},{"date":"2026-03-14","cin":"16:50","cout":"01:23","lateM":0},{"date":"2026-03-15","cin":"10:07","cout":"21:20","lateM":0},{"date":"2026-03-16","cin":"","cout":"","lateM":0},{"date":"2026-03-17","cin":"16:48","cout":"00:09","lateM":0},{"date":"2026-03-18","cin":"16:59","cout":"00:34","lateM":0},{"date":"2026-03-19","cin":"16:54","cout":"23:42","lateM":0},{"date":"2026-03-20","cin":"16:48","cout":"23:26","lateM":0},{"date":"2026-03-21","cin":"16:51","cout":"23:36","lateM":0},{"date":"2026-03-22","cin":"","cout":"","lateM":0},{"date":"2026-03-23","cin":"","cout":"","lateM":0},{"date":"2026-03-24","cin":"10:07","cout":"","lateM":0},{"date":"2026-03-25","cin":"16:51","cout":"23:44","lateM":0},{"date":"2026-03-26","cin":"16:54","cout":"23:58","lateM":0},{"date":"2026-03-27","cin":"","cout":"","lateM":0}],"8":[{"date":"2026-03-01","cin":"10:05","cout":"","lateM":0},{"date":"2026-03-02","cin":"","cout":"","lateM":0},{"date":"2026-03-03","cin":"","cout":"","lateM":0},{"date":"2026-03-04","cin":"10:08","cout":"00:47","lateM":0},{"date":"2026-03-05","cin":"10:03","cout":"20:43","lateM":0},{"date":"2026-03-06","cin":"15:19","cout":"23:20","lateM":19},{"date":"2026-03-07","cin":"10:05","cout":"","lateM":0},{"date":"2026-03-08","cin":"10:02","cout":"","lateM":0},{"date":"2026-03-09","cin":"10:08","cout":"01:50","lateM":0},{"date":"2026-03-10","cin":"10:07","cout":"00:00","lateM":0},{"date":"2026-03-11","cin":"","cout":"","lateM":0},{"date":"2026-03-12","cin":"10:10","cout":"","lateM":0},{"date":"2026-03-13","cin":"10:07","cout":"20:44","lateM":0},{"date":"2026-03-14","cin":"10:03","cout":"20:27","lateM":0},{"date":"2026-03-15","cin":"10:03","cout":"20:04","lateM":0},{"date":"2026-03-16","cin":"10:05","cout":"23:44","lateM":0},{"date":"2026-03-17","cin":"","cout":"","lateM":0},{"date":"2026-03-18","cin":"10:04","cout":"21:44","lateM":0},{"date":"2026-03-19","cin":"10:08","cout":"20:17","lateM":0},{"date":"2026-03-20","cin":"10:08","cout":"20:41","lateM":0},{"date":"2026-03-21","cin":"10:08","cout":"20:37","lateM":0},{"date":"2026-03-22","cin":"10:04","cout":"23:32","lateM":0},{"date":"2026-03-23","cin":"","cout":"","lateM":0},{"date":"2026-03-24","cin":"10:13","cout":"20:14","lateM":0},{"date":"2026-03-25","cin":"10:00","cout":"20:54","lateM":0},{"date":"2026-03-26","cin":"10:09","cout":"20:17","lateM":0},{"date":"2026-03-27","cin":"10:06","cout":"","lateM":0}],"9":[{"date":"2026-03-01","cin":"10:08","cout":"21:39","lateM":0},{"date":"2026-03-02","cin":"10:05","cout":"21:04","lateM":0},{"date":"2026-03-03","cin":"10:09","cout":"21:03","lateM":0},{"date":"2026-03-04","cin":"10:10","cout":"21:07","lateM":0},{"date":"2026-03-05","cin":"","cout":"","lateM":0},{"date":"2026-03-06","cin":"10:11","cout":"21:05","lateM":11},{"date":"2026-03-07","cin":"10:09","cout":"21:08","lateM":0},{"date":"2026-03-08","cin":"10:12","cout":"21:00","lateM":12},{"date":"2026-03-09","cin":"11:26","cout":"21:04","lateM":86},{"date":"2026-03-10","cin":"10:10","cout":"21:10","lateM":0},{"date":"2026-03-11","cin":"10:09","cout":"21:18","lateM":0},{"date":"2026-03-12","cin":"","cout":"","lateM":0},{"date":"2026-03-13","cin":"11:13","cout":"21:37","lateM":73},{"date":"2026-03-14","cin":"10:10","cout":"21:05","lateM":0},{"date":"2026-03-15","cin":"10:09","cout":"21:01","lateM":0},{"date":"2026-03-16","cin":"10:09","cout":"21:08","lateM":0},{"date":"2026-03-17","cin":"10:08","cout":"21:04","lateM":0},{"date":"2026-03-18","cin":"10:12","cout":"21:13","lateM":12},{"date":"2026-03-19","cin":"","cout":"","lateM":0},{"date":"2026-03-20","cin":"10:19","cout":"21:04","lateM":19},{"date":"2026-03-21","cin":"10:09","cout":"21:15","lateM":0},{"date":"2026-03-22","cin":"10:27","cout":"21:05","lateM":27},{"date":"2026-03-23","cin":"10:10","cout":"21:02","lateM":0},{"date":"2026-03-24","cin":"10:07","cout":"21:14","lateM":0},{"date":"2026-03-25","cin":"","cout":"","lateM":0},{"date":"2026-03-26","cin":"10:03","cout":"21:05","lateM":0},{"date":"2026-03-27","cin":"10:08","cout":"","lateM":0}],"10":[{"date":"2026-03-01","cin":"16:50","cout":"23:13","lateM":0},{"date":"2026-03-02","cin":"16:46","cout":"23:45","lateM":0},{"date":"2026-03-03","cin":"09:59","cout":"20:07","lateM":0},{"date":"2026-03-04","cin":"16:53","cout":"00:40","lateM":0},{"date":"2026-03-05","cin":"16:41","cout":"23:03","lateM":0},{"date":"2026-03-06","cin":"","cout":"","lateM":0},{"date":"2026-03-07","cin":"","cout":"","lateM":0},{"date":"2026-03-08","cin":"16:47","cout":"23:18","lateM":0},{"date":"2026-03-09","cin":"16:56","cout":"01:40","lateM":0},{"date":"2026-03-10","cin":"17:03","cout":"23:48","lateM":0},{"date":"2026-03-11","cin":"17:00","cout":"23:28","lateM":0},{"date":"2026-03-12","cin":"","cout":"","lateM":0},{"date":"2026-03-13","cin":"","cout":"","lateM":0},{"date":"2026-03-14","cin":"","cout":"","lateM":0},{"date":"2026-03-15","cin":"16:54","cout":"23:49","lateM":0},{"date":"2026-03-16","cin":"17:01","cout":"23:21","lateM":0},{"date":"2026-03-17","cin":"16:54","cout":"00:03","lateM":0},{"date":"2026-03-18","cin":"16:54","cout":"00:33","lateM":0},{"date":"2026-03-19","cin":"17:01","cout":"","lateM":0},{"date":"2026-03-20","cin":"","cout":"","lateM":0},{"date":"2026-03-21","cin":"10:00","cout":"17:55","lateM":0},{"date":"2026-03-22","cin":"","cout":"23:32","lateM":0},{"date":"2026-03-23","cin":"17:05","cout":"23:30","lateM":0},{"date":"2026-03-24","cin":"17:01","cout":"00:44","lateM":0},{"date":"2026-03-25","cin":"17:01","cout":"23:45","lateM":0},{"date":"2026-03-26","cin":"16:58","cout":"23:58","lateM":0},{"date":"2026-03-27","cin":"","cout":"","lateM":0}],"11":[{"date":"2026-03-01","cin":"","cout":"","lateM":0},{"date":"2026-03-02","cin":"","cout":"","lateM":0},{"date":"2026-03-03","cin":"16:43","cout":"23:05","lateM":0},{"date":"2026-03-04","cin":"16:46","cout":"00:38","lateM":0},{"date":"2026-03-05","cin":"","cout":"23:03","lateM":0},{"date":"2026-03-06","cin":"","cout":"","lateM":0},{"date":"2026-03-07","cin":"","cout":"","lateM":0},{"date":"2026-03-08","cin":"","cout":"","lateM":0},{"date":"2026-03-09","cin":"","cout":"","lateM":0},{"date":"2026-03-10","cin":"16:44","cout":"23:12","lateM":0},{"date":"2026-03-11","cin":"16:38","cout":"23:07","lateM":0},{"date":"2026-03-12","cin":"16:44","cout":"23:26","lateM":0},{"date":"2026-03-13","cin":"","cout":"","lateM":0},{"date":"2026-03-14","cin":"16:46","cout":"01:02","lateM":0},{"date":"2026-03-15","cin":"","cout":"","lateM":0},{"date":"2026-03-16","cin":"","cout":"","lateM":0},{"date":"2026-03-17","cin":"16:50","cout":"","lateM":0},{"date":"2026-03-18","cin":"16:48","cout":"00:25","lateM":0},{"date":"2026-03-19","cin":"16:53","cout":"23:43","lateM":0},{"date":"2026-03-20","cin":"","cout":"","lateM":0},{"date":"2026-03-21","cin":"16:48","cout":"23:29","lateM":0},{"date":"2026-03-22","cin":"","cout":"","lateM":0},{"date":"2026-03-23","cin":"","cout":"","lateM":0},{"date":"2026-03-24","cin":"16:49","cout":"00:36","lateM":0},{"date":"2026-03-25","cin":"16:44","cout":"23:30","lateM":0},{"date":"2026-03-26","cin":"","cout":"","lateM":0},{"date":"2026-03-27","cin":"","cout":"","lateM":0}],"12":[{"date":"2026-03-01","cin":"16:37","cout":"23:13","lateM":0},{"date":"2026-03-02","cin":"16:47","cout":"23:43","lateM":0},{"date":"2026-03-03","cin":"","cout":"","lateM":0},{"date":"2026-03-04","cin":"","cout":"","lateM":0},{"date":"2026-03-05","cin":"16:43","cout":"23:04","lateM":0},{"date":"2026-03-06","cin":"16:47","cout":"23:19","lateM":0},{"date":"2026-03-07","cin":"16:46","cout":"00:22","lateM":0},{"date":"2026-03-08","cin":"16:41","cout":"23:19","lateM":0},{"date":"2026-03-09","cin":"16:51","cout":"01:48","lateM":0},{"date":"2026-03-10","cin":"","cout":"","lateM":0},{"date":"2026-03-11","cin":"","cout":"","lateM":0},{"date":"2026-03-12","cin":"16:50","cout":"23:25","lateM":0},{"date":"2026-03-13","cin":"","cout":"","lateM":0},{"date":"2026-03-14","cin":"16:47","cout":"01:17","lateM":0},{"date":"2026-03-15","cin":"16:47","cout":"23:49","lateM":0},{"date":"2026-03-16","cin":"16:40","cout":"","lateM":0},{"date":"2026-03-17","cin":"","cout":"","lateM":0},{"date":"2026-03-18","cin":"","cout":"","lateM":0},{"date":"2026-03-19","cin":"16:43","cout":"23:52","lateM":0},{"date":"2026-03-20","cin":"16:43","cout":"23:25","lateM":0},{"date":"2026-03-21","cin":"16:27","cout":"","lateM":0},{"date":"2026-03-22","cin":"16:44","cout":"23:31","lateM":0},{"date":"2026-03-23","cin":"16:35","cout":"23:17","lateM":0},{"date":"2026-03-24","cin":"","cout":"","lateM":0},{"date":"2026-03-25","cin":"","cout":"","lateM":0},{"date":"2026-03-26","cin":"16:43","cout":"23:58","lateM":0},{"date":"2026-03-27","cin":"","cout":"","lateM":0}],"13":[{"date":"2026-03-01","cin":"10:45","cout":"22:00","lateM":45},{"date":"2026-03-02","cin":"10:31","cout":"22:01","lateM":31},{"date":"2026-03-03","cin":"10:39","cout":"22:02","lateM":39},{"date":"2026-03-04","cin":"10:28","cout":"22:09","lateM":28},{"date":"2026-03-05","cin":"10:32","cout":"21:57","lateM":32},{"date":"2026-03-06","cin":"10:38","cout":"21:58","lateM":38},{"date":"2026-03-07","cin":"10:27","cout":"22:05","lateM":27},{"date":"2026-03-08","cin":"10:27","cout":"22:01","lateM":27},{"date":"2026-03-09","cin":"10:22","cout":"22:06","lateM":22},{"date":"2026-03-10","cin":"10:31","cout":"22:05","lateM":31},{"date":"2026-03-11","cin":"10:26","cout":"21:56","lateM":26},{"date":"2026-03-12","cin":"11:48","cout":"22:02","lateM":108},{"date":"2026-03-13","cin":"10:26","cout":"22:04","lateM":26},{"date":"2026-03-14","cin":"10:14","cout":"22:02","lateM":14},{"date":"2026-03-15","cin":"10:32","cout":"22:02","lateM":32},{"date":"2026-03-16","cin":"10:12","cout":"22:05","lateM":12},{"date":"2026-03-17","cin":"10:28","cout":"","lateM":0},{"date":"2026-03-18","cin":"10:29","cout":"21:59","lateM":29},{"date":"2026-03-19","cin":"10:47","cout":"21:55","lateM":47},{"date":"2026-03-20","cin":"10:29","cout":"21:59","lateM":29},{"date":"2026-03-21","cin":"10:12","cout":"21:57","lateM":12},{"date":"2026-03-22","cin":"10:34","cout":"22:03","lateM":34},{"date":"2026-03-23","cin":"10:17","cout":"21:53","lateM":17},{"date":"2026-03-24","cin":"09:55","cout":"17:25","lateM":0},{"date":"2026-03-25","cin":"10:32","cout":"22:07","lateM":32},{"date":"2026-03-26","cin":"10:37","cout":"16:36","lateM":37},{"date":"2026-03-27","cin":"10:25","cout":"","lateM":0}],"14":[{"date":"2026-03-01","cin":"09:29","cout":"22:02","lateM":0},{"date":"2026-03-02","cin":"09:51","cout":"22:01","lateM":0},{"date":"2026-03-03","cin":"09:44","cout":"22:03","lateM":0},{"date":"2026-03-04","cin":"09:53","cout":"22:11","lateM":0},{"date":"2026-03-05","cin":"09:35","cout":"21:57","lateM":0},{"date":"2026-03-06","cin":"09:35","cout":"22:00","lateM":0},{"date":"2026-03-07","cin":"09:52","cout":"22:04","lateM":0},{"date":"2026-03-08","cin":"10:02","cout":"22:03","lateM":0},{"date":"2026-03-09","cin":"09:40","cout":"22:03","lateM":0},{"date":"2026-03-10","cin":"10:00","cout":"22:05","lateM":0},{"date":"2026-03-11","cin":"09:55","cout":"21:56","lateM":0},{"date":"2026-03-12","cin":"09:51","cout":"22:03","lateM":0},{"date":"2026-03-13","cin":"09:43","cout":"22:04","lateM":0},{"date":"2026-03-14","cin":"10:05","cout":"22:04","lateM":0},{"date":"2026-03-15","cin":"09:39","cout":"","lateM":0},{"date":"2026-03-16","cin":"10:26","cout":"22:10","lateM":26},{"date":"2026-03-17","cin":"10:01","cout":"22:03","lateM":0},{"date":"2026-03-18","cin":"09:56","cout":"21:59","lateM":0},{"date":"2026-03-19","cin":"09:57","cout":"21:55","lateM":0},{"date":"2026-03-20","cin":"09:47","cout":"21:58","lateM":0},{"date":"2026-03-21","cin":"09:47","cout":"21:57","lateM":0},{"date":"2026-03-22","cin":"09:52","cout":"22:01","lateM":0},{"date":"2026-03-23","cin":"","cout":"21:54","lateM":0},{"date":"2026-03-24","cin":"09:58","cout":"22:04","lateM":0},{"date":"2026-03-25","cin":"09:56","cout":"22:06","lateM":0},{"date":"2026-03-26","cin":"10:08","cout":"22:00","lateM":0},{"date":"2026-03-27","cin":"09:47","cout":"","lateM":0}],"15":[{"date":"2026-03-01","cin":"15:20","cout":"23:16","lateM":20},{"date":"2026-03-02","cin":"10:38","cout":"23:50","lateM":38},{"date":"2026-03-03","cin":"10:23","cout":"23:18","lateM":23},{"date":"2026-03-04","cin":"","cout":"","lateM":0},{"date":"2026-03-05","cin":"15:04","cout":"23:04","lateM":0},{"date":"2026-03-06","cin":"10:13","cout":"20:20","lateM":13},{"date":"2026-03-07","cin":"14:57","cout":"00:22","lateM":0},{"date":"2026-03-08","cin":"15:21","cout":"23:20","lateM":21},{"date":"2026-03-09","cin":"","cout":"","lateM":0},{"date":"2026-03-10","cin":"","cout":"","lateM":0},{"date":"2026-03-11","cin":"10:51","cout":"23:34","lateM":51},{"date":"2026-03-12","cin":"16:00","cout":"23:25","lateM":60},{"date":"2026-03-13","cin":"15:40","cout":"00:05","lateM":40},{"date":"2026-03-14","cin":"14:55","cout":"01:23","lateM":0},{"date":"2026-03-15","cin":"15:50","cout":"23:52","lateM":50},{"date":"2026-03-16","cin":"","cout":"","lateM":0},{"date":"2026-03-17","cin":"","cout":"","lateM":0}],"16":[{"date":"2026-03-01","cin":"10:03","cout":"22:00","lateM":0},{"date":"2026-03-02","cin":"10:25","cout":"22:02","lateM":25},{"date":"2026-03-03","cin":"10:33","cout":"22:03","lateM":33},{"date":"2026-03-04","cin":"","cout":"22:11","lateM":0},{"date":"2026-03-05","cin":"10:18","cout":"22:00","lateM":18},{"date":"2026-03-06","cin":"10:27","cout":"21:58","lateM":27},{"date":"2026-03-07","cin":"10:10","cout":"","lateM":0},{"date":"2026-03-08","cin":"10:34","cout":"21:59","lateM":34},{"date":"2026-03-09","cin":"10:29","cout":"22:04","lateM":29},{"date":"2026-03-10","cin":"10:34","cout":"22:07","lateM":34},{"date":"2026-03-11","cin":"10:39","cout":"21:57","lateM":39},{"date":"2026-03-12","cin":"","cout":"22:03","lateM":0},{"date":"2026-03-13","cin":"10:42","cout":"22:05","lateM":42},{"date":"2026-03-14","cin":"","cout":"22:09","lateM":0},{"date":"2026-03-15","cin":"10:28","cout":"22:07","lateM":28},{"date":"2026-03-16","cin":"10:39","cout":"22:10","lateM":39},{"date":"2026-03-17","cin":"10:31","cout":"","lateM":0},{"date":"2026-03-18","cin":"","cout":"","lateM":0},{"date":"2026-03-19","cin":"","cout":"","lateM":0},{"date":"2026-03-20","cin":"","cout":"","lateM":0},{"date":"2026-03-21","cin":"","cout":"21:57","lateM":0},{"date":"2026-03-22","cin":"10:30","cout":"22:00","lateM":30},{"date":"2026-03-23","cin":"10:06","cout":"21:54","lateM":0},{"date":"2026-03-24","cin":"10:22","cout":"22:03","lateM":22},{"date":"2026-03-25","cin":"09:51","cout":"22:06","lateM":0},{"date":"2026-03-26","cin":"10:12","cout":"22:01","lateM":12},{"date":"2026-03-27","cin":"10:35","cout":"","lateM":0}],"17":[{"date":"2026-03-01","cin":"17:07","cout":"23:10","lateM":0},{"date":"2026-03-02","cin":"","cout":"","lateM":0},{"date":"2026-03-03","cin":"17:24","cout":"23:07","lateM":24},{"date":"2026-03-04","cin":"17:09","cout":"00:12","lateM":0},{"date":"2026-03-05","cin":"","cout":"","lateM":0},{"date":"2026-03-06","cin":"17:57","cout":"23:15","lateM":57},{"date":"2026-03-07","cin":"","cout":"","lateM":0},{"date":"2026-03-08","cin":"","cout":"","lateM":0},{"date":"2026-03-09","cin":"","cout":"","lateM":0},{"date":"2026-03-10","cin":"17:20","cout":"23:14","lateM":20},{"date":"2026-03-11","cin":"17:49","cout":"23:30","lateM":49},{"date":"2026-03-12","cin":"","cout":"","lateM":0},{"date":"2026-03-13","cin":"16:50","cout":"23:12","lateM":0},{"date":"2026-03-14","cin":"16:51","cout":"00:39","lateM":0},{"date":"2026-03-15","cin":"16:55","cout":"23:38","lateM":0},{"date":"2026-03-16","cin":"","cout":"","lateM":0},{"date":"2026-03-17","cin":"17:01","cout":"23:16","lateM":0},{"date":"2026-03-18","cin":"17:23","cout":"00:14","lateM":23},{"date":"2026-03-19","cin":"","cout":"","lateM":0},{"date":"2026-03-20","cin":"16:37","cout":"22:51","lateM":0},{"date":"2026-03-21","cin":"17:30","cout":"23:15","lateM":30},{"date":"2026-03-22","cin":"17:44","cout":"23:24","lateM":44},{"date":"2026-03-23","cin":"","cout":"","lateM":0},{"date":"2026-03-24","cin":"17:30","cout":"23:42","lateM":30},{"date":"2026-03-25","cin":"17:49","cout":"","lateM":0},{"date":"2026-03-26","cin":"","cout":"","lateM":0},{"date":"2026-03-27","cin":"","cout":"","lateM":0}],"18":[{"date":"2026-03-01","cin":"14:03","cout":"22:07","lateM":0},{"date":"2026-03-02","cin":"14:06","cout":"00:18","lateM":0},{"date":"2026-03-03","cin":"14:05","cout":"23:51","lateM":0},{"date":"2026-03-04","cin":"14:07","cout":"23:44","lateM":0},{"date":"2026-03-05","cin":"","cout":"","lateM":0},{"date":"2026-03-06","cin":"15:00","cout":"23:42","lateM":0},{"date":"2026-03-07","cin":"14:05","cout":"00:57","lateM":0},{"date":"2026-03-08","cin":"14:08","cout":"22:04","lateM":0},{"date":"2026-03-09","cin":"14:04","cout":"02:08","lateM":0},{"date":"2026-03-10","cin":"","cout":"23:15","lateM":0},{"date":"2026-03-11","cin":"14:53","cout":"23:44","lateM":0},{"date":"2026-03-12","cin":"","cout":"","lateM":0},{"date":"2026-03-13","cin":"14:24","cout":"23:40","lateM":0},{"date":"2026-03-14","cin":"14:05","cout":"22:53","lateM":0},{"date":"2026-03-15","cin":"","cout":"22:21","lateM":0},{"date":"2026-03-16","cin":"","cout":"00:20","lateM":0},{"date":"2026-03-17","cin":"","cout":"","lateM":0},{"date":"2026-03-18","cin":"14:31","cout":"22:33","lateM":0},{"date":"2026-03-19","cin":"","cout":"","lateM":0},{"date":"2026-03-20","cin":"14:56","cout":"23:21","lateM":0},{"date":"2026-03-21","cin":"15:05","cout":"22:18","lateM":0},{"date":"2026-03-22","cin":"15:05","cout":"22:59","lateM":0},{"date":"2026-03-23","cin":"15:06","cout":"00:02","lateM":0},{"date":"2026-03-24","cin":"15:09","cout":"23:55","lateM":0},{"date":"2026-03-25","cin":"15:02","cout":"22:43","lateM":0},{"date":"2026-03-26","cin":"","cout":"","lateM":0},{"date":"2026-03-27","cin":"15:14","cout":"","lateM":0}],"19":[{"date":"2026-03-01","cin":"14:07","cout":"22:06","lateM":0},{"date":"2026-03-02","cin":"15:47","cout":"00:02","lateM":47},{"date":"2026-03-03","cin":"14:45","cout":"23:50","lateM":0},{"date":"2026-03-04","cin":"14:20","cout":"23:49","lateM":0},{"date":"2026-03-05","cin":"14:16","cout":"22:41","lateM":0},{"date":"2026-03-06","cin":"","cout":"23:45","lateM":0},{"date":"2026-03-07","cin":"14:26","cout":"00:59","lateM":0},{"date":"2026-03-08","cin":"14:20","cout":"22:02","lateM":0},{"date":"2026-03-09","cin":"","cout":"","lateM":0},{"date":"2026-03-10","cin":"14:07","cout":"23:13","lateM":0},{"date":"2026-03-11","cin":"14:17","cout":"23:45","lateM":0},{"date":"2026-03-12","cin":"14:43","cout":"23:27","lateM":0},{"date":"2026-03-13","cin":"","cout":"23:43","lateM":0},{"date":"2026-03-14","cin":"14:00","cout":"22:53","lateM":0},{"date":"2026-03-15","cin":"14:57","cout":"22:20","lateM":0},{"date":"2026-03-16","cin":"","cout":"","lateM":0},{"date":"2026-03-17","cin":"16:26","cout":"23:40","lateM":0},{"date":"2026-03-18","cin":"14:53","cout":"22:37","lateM":0},{"date":"2026-03-19","cin":"14:57","cout":"00:12","lateM":0},{"date":"2026-03-20","cin":"14:52","cout":"23:21","lateM":0},{"date":"2026-03-21","cin":"","cout":"22:35","lateM":0},{"date":"2026-03-22","cin":"14:57","cout":"23:30","lateM":0},{"date":"2026-03-23","cin":"14:59","cout":"00:03","lateM":0},{"date":"2026-03-24","cin":"15:27","cout":"23:53","lateM":27},{"date":"2026-03-25","cin":"14:58","cout":"22:42","lateM":0},{"date":"2026-03-26","cin":"15:43","cout":"","lateM":0},{"date":"2026-03-27","cin":"14:58","cout":"","lateM":0}],"20":[{"date":"2026-03-01","cin":"","cout":"","lateM":0},{"date":"2026-03-02","cin":"16:53","cout":"23:42","lateM":0},{"date":"2026-03-03","cin":"16:56","cout":"23:08","lateM":0},{"date":"2026-03-04","cin":"16:57","cout":"23:18","lateM":0},{"date":"2026-03-05","cin":"16:26","cout":"22:59","lateM":0},{"date":"2026-03-06","cin":"16:56","cout":"23:15","lateM":0},{"date":"2026-03-07","cin":"17:02","cout":"23:25","lateM":0},{"date":"2026-03-08","cin":"","cout":"","lateM":0},{"date":"2026-03-09","cin":"16:53","cout":"01:02","lateM":0},{"date":"2026-03-10","cin":"17:04","cout":"23:16","lateM":0},{"date":"2026-03-11","cin":"17:01","cout":"23:28","lateM":0},{"date":"2026-03-12","cin":"17:01","cout":"23:20","lateM":0},{"date":"2026-03-13","cin":"16:58","cout":"23:53","lateM":0},{"date":"2026-03-14","cin":"16:59","cout":"22:51","lateM":0},{"date":"2026-03-15","cin":"","cout":"","lateM":0},{"date":"2026-03-16","cin":"17:06","cout":"23:41","lateM":0},{"date":"2026-03-17","cin":"16:58","cout":"23:31","lateM":0},{"date":"2026-03-18","cin":"16:58","cout":"22:48","lateM":0},{"date":"2026-03-19","cin":"16:53","cout":"23:45","lateM":0},{"date":"2026-03-20","cin":"16:59","cout":"23:11","lateM":0},{"date":"2026-03-21","cin":"17:49","cout":"22:27","lateM":49},{"date":"2026-03-22","cin":"","cout":"","lateM":0},{"date":"2026-03-23","cin":"16:32","cout":"23:15","lateM":0},{"date":"2026-03-24","cin":"17:00","cout":"23:36","lateM":0},{"date":"2026-03-25","cin":"16:55","cout":"22:30","lateM":0},{"date":"2026-03-26","cin":"16:59","cout":"23:54","lateM":0},{"date":"2026-03-27","cin":"","cout":"","lateM":0}],"21":[{"date":"2026-03-01","cin":"07:26","cout":"09:38","lateM":0},{"date":"2026-03-02","cin":"07:57","cout":"12:05","lateM":0},{"date":"2026-03-03","cin":"07:38","cout":"17:06","lateM":0},{"date":"2026-03-04","cin":"07:43","cout":"17:03","lateM":0},{"date":"2026-03-05","cin":"07:48","cout":"17:00","lateM":0},{"date":"2026-03-06","cin":"07:34","cout":"17:25","lateM":0},{"date":"2026-03-07","cin":"07:39","cout":"17:08","lateM":0},{"date":"2026-03-08","cin":"07:45","cout":"10:15","lateM":0},{"date":"2026-03-09","cin":"08:06","cout":"","lateM":0},{"date":"2026-03-10","cin":"08:01","cout":"17:06","lateM":0},{"date":"2026-03-11","cin":"07:40","cout":"17:01","lateM":0},{"date":"2026-03-12","cin":"07:52","cout":"17:11","lateM":0},{"date":"2026-03-13","cin":"07:26","cout":"12:03","lateM":0},{"date":"2026-03-14","cin":"07:39","cout":"","lateM":0},{"date":"2026-03-15","cin":"07:23","cout":"09:57","lateM":0},{"date":"2026-03-16","cin":"07:47","cout":"17:07","lateM":0},{"date":"2026-03-17","cin":"08:10","cout":"17:02","lateM":0},{"date":"2026-03-18","cin":"","cout":"","lateM":0},{"date":"2026-03-19","cin":"07:43","cout":"17:10","lateM":0},{"date":"2026-03-20","cin":"07:28","cout":"17:10","lateM":0},{"date":"2026-03-21","cin":"07:24","cout":"17:02","lateM":0},{"date":"2026-03-22","cin":"07:32","cout":"09:53","lateM":0},{"date":"2026-03-23","cin":"07:45","cout":"17:03","lateM":0},{"date":"2026-03-24","cin":"07:16","cout":"17:05","lateM":0},{"date":"2026-03-25","cin":"07:26","cout":"17:01","lateM":0},{"date":"2026-03-26","cin":"","cout":"","lateM":0},{"date":"2026-03-27","cin":"07:39","cout":"","lateM":0}],"22":[{"date":"2026-03-01","cin":"09:53","cout":"22:00","lateM":0},{"date":"2026-03-02","cin":"09:52","cout":"22:01","lateM":0},{"date":"2026-03-03","cin":"09:53","cout":"22:02","lateM":0},{"date":"2026-03-04","cin":"09:54","cout":"22:07","lateM":0},{"date":"2026-03-05","cin":"09:51","cout":"21:57","lateM":0},{"date":"2026-03-06","cin":"09:52","cout":"21:59","lateM":0},{"date":"2026-03-07","cin":"09:53","cout":"22:05","lateM":0},{"date":"2026-03-08","cin":"","cout":"","lateM":0},{"date":"2026-03-09","cin":"13:23","cout":"22:00","lateM":203},{"date":"2026-03-10","cin":"09:54","cout":"22:04","lateM":0},{"date":"2026-03-11","cin":"09:54","cout":"21:56","lateM":0},{"date":"2026-03-12","cin":"09:53","cout":"22:02","lateM":0},{"date":"2026-03-13","cin":"09:52","cout":"22:04","lateM":0},{"date":"2026-03-14","cin":"09:54","cout":"22:00","lateM":0},{"date":"2026-03-15","cin":"09:54","cout":"22:05","lateM":0},{"date":"2026-03-16","cin":"09:52","cout":"22:03","lateM":0},{"date":"2026-03-17","cin":"","cout":"","lateM":0},{"date":"2026-03-18","cin":"09:47","cout":"21:59","lateM":0},{"date":"2026-03-19","cin":"09:49","cout":"21:54","lateM":0},{"date":"2026-03-20","cin":"09:47","cout":"22:00","lateM":0},{"date":"2026-03-21","cin":"09:45","cout":"21:57","lateM":0},{"date":"2026-03-22","cin":"09:51","cout":"22:00","lateM":0},{"date":"2026-03-23","cin":"09:53","cout":"","lateM":0},{"date":"2026-03-24","cin":"09:53","cout":"22:04","lateM":0},{"date":"2026-03-25","cin":"09:49","cout":"22:06","lateM":0},{"date":"2026-03-26","cin":"09:53","cout":"22:00","lateM":0},{"date":"2026-03-27","cin":"09:52","cout":"","lateM":0}],"23":[{"date":"2026-03-02","cin":"17:13","cout":"23:26","lateM":13},{"date":"2026-03-03","cin":"16:53","cout":"23:17","lateM":0},{"date":"2026-03-04","cin":"","cout":"","lateM":0},{"date":"2026-03-05","cin":"","cout":"","lateM":0},{"date":"2026-03-06","cin":"16:50","cout":"23:20","lateM":0},{"date":"2026-03-07","cin":"16:50","cout":"00:21","lateM":0},{"date":"2026-03-08","cin":"16:50","cout":"23:13","lateM":0},{"date":"2026-03-09","cin":"16:54","cout":"01:36","lateM":0},{"date":"2026-03-10","cin":"16:52","cout":"23:13","lateM":0},{"date":"2026-03-11","cin":"","cout":"","lateM":0},{"date":"2026-03-12","cin":"","cout":"","lateM":0},{"date":"2026-03-13","cin":"16:48","cout":"23:45","lateM":0},{"date":"2026-03-14","cin":"16:50","cout":"01:18","lateM":0},{"date":"2026-03-15","cin":"16:51","cout":"23:48","lateM":0},{"date":"2026-03-16","cin":"16:53","cout":"23:28","lateM":0},{"date":"2026-03-17","cin":"16:57","cout":"23:48","lateM":0},{"date":"2026-03-18","cin":"","cout":"","lateM":0},{"date":"2026-03-19","cin":"","cout":"","lateM":0},{"date":"2026-03-20","cin":"16:49","cout":"23:14","lateM":0},{"date":"2026-03-21","cin":"16:49","cout":"23:13","lateM":0},{"date":"2026-03-22","cin":"16:49","cout":"23:25","lateM":0},{"date":"2026-03-23","cin":"16:48","cout":"23:24","lateM":0},{"date":"2026-03-24","cin":"16:48","cout":"00:13","lateM":0},{"date":"2026-03-25","cin":"","cout":"","lateM":0},{"date":"2026-03-26","cin":"","cout":"","lateM":0},{"date":"2026-03-27","cin":"","cout":"","lateM":0}]};
+
+
+let CURRENT_MONTH = localStorage.getItem('PAYROLL_ACTIVE_MONTH') || '2026-04';
+function getMonthKey() { return CURRENT_MONTH.replace('-', ''); }
+
+function getMonthName() {
+  const m = parseInt(CURRENT_MONTH.split('-')[1]);
+  const names = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+  return names[m] + ' ' + CURRENT_MONTH.split('-')[0];
+}
+
+let storedPunches = localStorage.getItem('PAYROLL_RAW_PUNCHES_' + getMonthKey());
+if (storedPunches) {
+  try { setTimeout(()=>{ RAW_PUNCHES = JSON.parse(storedPunches); syncNewSettingsAndCalculate(); }, 1); } catch(e){}
+}
+function saveRawPunches() {
+  try { localStorage.setItem('PAYROLL_RAW_PUNCHES_' + getMonthKey(), JSON.stringify(RAW_PUNCHES)); } catch(e){}
+}
+
+let storedShift = localStorage.getItem('PAYROLL_SHIFT_' + getMonthKey());
+if (storedShift) {
+  try { setTimeout(()=>{ SHIFT = JSON.parse(storedShift); syncNewSettingsAndCalculate(); }, 1); } catch(e){}
+}
+let storedDeptRules = localStorage.getItem('PAYROLL_DEPT_RULES_' + getMonthKey());
+if (storedDeptRules) {
+  try { setTimeout(()=>{ DEPT_RULES = JSON.parse(storedDeptRules); syncNewSettingsAndCalculate(); }, 1); } catch(e){}
+}
+
+let GLOBAL_RULES = null;
+
+function syncNewSettingsAndCalculate() {
+  try {
+    let savedRules = JSON.parse(localStorage.getItem('PAYROLL_SAVED_RULES_V1') || "{}");
+    if (savedRules.globalRules) {
+      GLOBAL_RULES = savedRules.globalRules;
+    }
+    // Sync employee profiles: hrs, d, mo, t, ot, lt, ss, dout
+    if (savedRules.shiftProfiles) {
+      Object.keys(savedRules.shiftProfiles).forEach(eid => {
+        if (!SHIFT[eid]) return;
+        const p = savedRules.shiftProfiles[eid];
+        if (p.hrs) SHIFT[eid].hrs = p.hrs;
+        if (p.d !== undefined) SHIFT[eid].d = p.d;
+        if (p.mo !== undefined) SHIFT[eid].mo = p.mo;
+        if (p.t) SHIFT[eid].t = p.t;
+        if (p.otType) SHIFT[eid].ot = p.otType;
+        if (p.lateType) SHIFT[eid].lt = p.lateType;
+      });
+    }
+    // Sync shift templates (ss, dout) into employee SHIFT object
+    if (savedRules.shiftTemplates && savedRules.shiftProfiles) {
+      Object.keys(savedRules.shiftProfiles).forEach(eid => {
+        if (!SHIFT[eid]) return;
+        const prof = savedRules.shiftProfiles[eid];
+        const tmpl = savedRules.shiftTemplates[prof.shiftId];
+        if (tmpl) {
+          if (tmpl.ss !== undefined) SHIFT[eid].ss = tmpl.ss;
+          if (tmpl.dout !== undefined) SHIFT[eid].dout = tmpl.dout;
+        }
+      });
+    }
+    // Sync OT department rules
+    if (savedRules.otDepartmentRules) {
+      Object.keys(savedRules.otDepartmentRules).forEach(dept => {
+        const r = savedRules.otDepartmentRules[dept];
+        DEPT_RULES[dept] = {
+          type: r.type || 'after',
+          time: r.time || 0,
+          cutoff: r.cutoff || null,
+          rate: r.rate || 40,
+          reqApprove: r.reqApprove !== false
+        };
+      });
+    }
+  } catch(e) { console.error('Failed to sync from new settings', e); }
+  calculateAllData();
+}
+
+let storedEdits = localStorage.getItem('PAYROLL_EDITS_' + getMonthKey());
+let EDITS = storedEdits ? JSON.parse(storedEdits) : {};
+function saveEdits() { localStorage.setItem('PAYROLL_EDITS_' + getMonthKey(), JSON.stringify(EDITS)); }
+
+let storedAdvances = localStorage.getItem('PAYROLL_ADVANCE_' + getMonthKey());
+let ADVANCES = storedAdvances ? JSON.parse(storedAdvances) : {};
+function saveAdvances() { localStorage.setItem('PAYROLL_ADVANCE_' + getMonthKey(), JSON.stringify(ADVANCES)); }
+
+let storedErrands = localStorage.getItem('PAYROLL_ERRANDS_' + getMonthKey());
+let ERRANDS = storedErrands ? JSON.parse(storedErrands) : {};
+function saveErrands() { localStorage.setItem('PAYROLL_ERRANDS_' + getMonthKey(), JSON.stringify(ERRANDS)); }
+
+let DAYS_IN_MONTH = new Date(parseInt(CURRENT_MONTH.split('-')[0]), parseInt(CURRENT_MONTH.split('-')[1]), 0).getDate();
+const OT_RATE = 40;
+let data = []; // The calculated results
+
+// -- Core Logic (ported from Node backend) --
+function parseH(s) {
+  if (!s || s.trim() === '' || s.trim() === '-') return null;
+  try { const p = s.trim().replace('.', ':').split(':'); return parseInt(p[0]) + parseInt(p[1]) / 60; } catch(e) { return null; }
+}
+function roundHalf(r) {
+  if (r <= 0) return 0;
+  const lower = Math.floor(r * 2) / 2, upper = lower + 0.5;
+  return (Math.round((upper - r) * 60 * 1e4) / 1e4) <= 10 ? upper : lower;
+}
+function isSunday(d) { try { return new Date(d.trim()).getDay() === 0; } catch(e) { return false; } }
+function getGrace(sr) {
+  if (GLOBAL_RULES && GLOBAL_RULES.lateRules) {
+    if (sr) {
+      if (sr.lt === 'monthly' || sr.t === 'รายเดือน') {
+        if (GLOBAL_RULES.lateRules.monthly && GLOBAL_RULES.lateRules.monthly.graceMinutes !== undefined)
+          return GLOBAL_RULES.lateRules.monthly.graceMinutes;
+      }
+      if (sr.lt === 'part' || sr.t === 'พาร์ทไทม์') {
+        if (GLOBAL_RULES.lateRules.parttime && GLOBAL_RULES.lateRules.parttime.graceMinutes !== undefined)
+          return GLOBAL_RULES.lateRules.parttime.graceMinutes;
+      }
+      if (sr.lt === 'office') {
+        if (GLOBAL_RULES.lateRules.office && GLOBAL_RULES.lateRules.office.graceMinutes !== undefined)
+          return GLOBAL_RULES.lateRules.office.graceMinutes;
+      }
+    }
+    if (GLOBAL_RULES.lateRules.graceMinutesGeneral !== undefined) {
+      return GLOBAL_RULES.lateRules.graceMinutesGeneral;
+    }
+  }
+  return 10;
+}
+function getKitchenGrace() {
+  if (GLOBAL_RULES && GLOBAL_RULES.lateRules && GLOBAL_RULES.lateRules.kitchen && GLOBAL_RULES.lateRules.kitchen.graceMinutes !== undefined) {
+    return GLOBAL_RULES.lateRules.kitchen.graceMinutes;
+  }
+  return 10;
+}
+function getLateRate() {
+  if (GLOBAL_RULES && GLOBAL_RULES.lateRules && GLOBAL_RULES.lateRules.daily && GLOBAL_RULES.lateRules.daily.ratePerBlock) {
+    return GLOBAL_RULES.lateRules.daily.ratePerBlock;
+  }
+  return 40;
+}
+function kitchenLate(m, rate, hrs=12) {
+  if (m <= getKitchenGrace()) return 0;
+  // Per-minute system: ratePerMin = dailyRate / hrs / 60
+  const ratePerMin = rate / hrs / 60;
+  return Math.round(m * ratePerMin * 100) / 100;
+}
+function getShift(eid, cinH) {
+  let sr = Object.assign({}, SHIFT[eid]);
+  if (eid==='8' && cinH!==null && cinH>=12) { sr.ss=15; sr.dout=2; sr.ot=null; }
+  
+  if (cinH !== null) {
+      // Build candidate list: always include employee's own base shift first
+      let candidates = [10, 15, 17];
+      if (GLOBAL_RULES && GLOBAL_RULES.dynamicShift && GLOBAL_RULES.dynamicShift.candidateShifts) {
+          candidates = [...GLOBAL_RULES.dynamicShift.candidateShifts];
+      }
+      // Always add employee's own shift so they're never mis-detected
+      if (sr.ss && !candidates.includes(sr.ss)) {
+          candidates.push(sr.ss);
+      }
+      
+      let closestShift = candidates[0];
+      for (let s of candidates) {
+          if (Math.abs(cinH - s) < Math.abs(cinH - closestShift)) closestShift = s;
+      }
+      
+      sr.detectedShift = closestShift;
+      
+      const origOt = SHIFT[eid].ot;
+      if (!['kitchen', 'football', 'looknum'].includes(origOt)) {
+          if (closestShift === 10) {
+              if (!sr.ot || sr.ot === 'none') sr.ot = 'morning';
+          } else {
+              if (sr.ot === 'morning' || sr.ot === 'morning_pt') sr.ot = 'none';
+          }
+      }
+  }
+  
+  return sr;
+}
+function calcOt(eid, cinH, coutH, sr) {
+  const ot = sr.ot; if (!ot||cinH===null||coutH===null) return 0;
+  const rule = DEPT_RULES[ot];
+  if (!rule) return 0;
+  
+  if (rule.type === 'after') {
+    let cout = coutH;
+    if (cout < cinH) cout += 24;
+    // cutoff check (e.g. 21.1666 for 21:10)
+    if (rule.cutoff && cout <= rule.cutoff) return 0;
+    return cout <= rule.time ? 0 : roundHalf(cout - rule.time);
+  } else if (rule.type === 'before') {
+    if (rule.cutoff && cinH >= rule.cutoff) return 0; 
+    return cinH < rule.time ? roundHalf(rule.time - cinH) : 0;
+  }
+  return 0;
+}
+function customRound(mins, policy) {
+  if (mins <= 10) return 0;
+  if (policy === 'hour') return Math.ceil(mins / 60);
+  return Math.ceil(mins / 30) * 0.5;
+}
+function calcLate(lm, sr, cinH) {
+  if (sr.ot==='kitchen') return kitchenLate(lm, sr.d, sr.hrs);
+  if (sr.lt==='football') {
+    if (cinH===null || cinH<=15) return 0;
+    let p=2, b=16;
+    while(b<=20){ if(cinH>b){p++;b++;} else break; }
+    return p*(sr.otRate || getLateRate());
+  }
+  // Office (Looknum, Chompoo) — per-minute deduction
+  if (sr.lt==='office') {
+    if (lm <= getGrace(sr)) return 0;
+    const ratePerMin = (sr.mo / DAYS_IN_MONTH) / sr.hrs / 60;
+    return Math.round(lm * ratePerMin * 100) / 100;
+  }
+  
+  const grace = getGrace(sr);
+  
+  // Apply dynamic rounding from GLOBAL_RULES if available
+  let roundPolicy = 'half';
+  if (GLOBAL_RULES && GLOBAL_RULES.rounding) {
+    if (sr.lt === 'part' || sr.t === 'พาร์ทไทม์') roundPolicy = GLOBAL_RULES.rounding.parttimeLate || 'half';
+    else if (sr.t === 'รายเดือน') roundPolicy = GLOBAL_RULES.rounding.salaryLate || 'half';
+    else roundPolicy = GLOBAL_RULES.rounding.dailyLate || 'half';
+  }
+
+  const blocks = customRound(lm, roundPolicy);
+
+  if (sr.t==='รายเดือน') {
+    if (lm<=grace) return 0;
+    const rph = (sr.mo/DAYS_IN_MONTH)/sr.hrs;
+    return Math.round(blocks*rph*100)/100;
+  } else {
+    if (lm<=grace) return 0;
+    return Math.round(blocks*(sr.otRate || getLateRate())*100)/100;
+  }
+}
+
+function calculateAllData(skipRender = false) {
+  let autoShopClosed = {}; 
+  let dailyCheckouts = {}; 
+  Object.keys(RAW_PUNCHES).forEach(eid => {
+    const rawRows = RAW_PUNCHES[eid] || [];
+    const srBase = SHIFT[eid]; if (!srBase) return;
+    rawRows.forEach(r => {
+      let checkin = r.cin;
+      let checkout = r.cout;
+      const k = eid+'_'+r.date;
+      if (EDITS[k]) {
+        if(EDITS[k].cin!==undefined) checkin=EDITS[k].cin;
+        if(EDITS[k].cout!==undefined) checkout=EDITS[k].cout;
+      }
+      let cinH = parseH(checkin), coutH = parseH(checkout);
+      if (coutH !== null && cinH !== null) {
+         let coutHNorm = coutH < cinH ? coutH + 24 : coutH;
+         let expectedEnd = srBase.dout;
+         if (expectedEnd <= 12) expectedEnd += 24;
+         if (expectedEnd >= 20) {
+            if (!dailyCheckouts[r.date]) dailyCheckouts[r.date] = [];
+            dailyCheckouts[r.date].push({
+                eid, coutHNorm, expectedEnd,
+                group: srBase.ot || 'general'
+            });
+         }
+      }
+    });
+  });
+  Object.keys(dailyCheckouts).forEach(dateStr => {
+      let byGroup = {};
+      dailyCheckouts[dateStr].forEach(c => {
+         let g = c.group;
+         if (!byGroup[g]) byGroup[g] = [];
+         byGroup[g].push(c);
+      });
+      Object.keys(byGroup).forEach(g => {
+         const list = byGroup[g];
+         if (list.length >= 2) {
+             let maxCout = Math.max(...list.map(c => c.coutHNorm));
+             let minCout = Math.min(...list.map(c => c.coutHNorm));
+             let expected = Math.max(...list.map(c => c.expectedEnd));
+             if (maxCout <= expected - 1.0 && (maxCout - minCout) <= 1.5) {
+                 autoShopClosed[`${dateStr}_${g}`] = maxCout;
+             }
+         }
+      });
+  });
+
+  const allData = [];
+  for (const eid of Object.keys(RAW_PUNCHES).sort((a,b)=>+a-+b)) {
+    const srBase = SHIFT[eid];
+    if (!srBase) continue; // safety check
+    const empRows = [];
+    const rawRows = RAW_PUNCHES[eid] || [];
+    const daysMap = {};
+    rawRows.forEach(r => {
+      if (!daysMap[r.date]) daysMap[r.date] = r;
+    });
+    
+    for (let day = 1; day <= DAYS_IN_MONTH; day++) {
+      const dateStr = `${CURRENT_MONTH}-${day.toString().padStart(2, '0')}`;
+      const d = daysMap[dateStr] || { date: dateStr, cin: '', cout: '', lateM: 0 };
+      
+      let lateM = parseFloat(d.lateM) || 0;
+      let checkin = d.cin;
+      let checkout = d.cout;
+      
+      const k = eid+'_'+dateStr;
+      if (EDITS[k]) {
+        if(EDITS[k].cin!==undefined) checkin=EDITS[k].cin;
+        if(EDITS[k].cout!==undefined) checkout=EDITS[k].cout;
+      }
+      
+      const cinH = parseH(checkin), coutH = parseH(checkout);
+      
+      const sr = getShift(eid, cinH);
+      let dayRate = srBase.t==='รายเดือน' ? Math.round(srBase.mo/DAYS_IN_MONTH*100)/100 : srBase.d;
+      let note = '';
+      let r_hasShopClosedStatus = false;
+
+      let effectiveCinH = cinH;
+      if (cinH !== null && sr.detectedShift !== undefined && sr.detectedShift !== null) {
+          const mns = (cinH - sr.detectedShift) * 60;
+          const grace = srBase.ot === 'kitchen' ? getKitchenGrace() : getGrace(srBase);
+          if (mns <= grace) {
+              // ถ้ามาเช้ากว่ากะ หรือมาสายแต่อยู่ในเกณฑ์ผ่อนผัน (Grace) ให้นับเวลาเริ่มกะเป๊ะๆ
+              // เพื่อ 1) ไม่จ่ายเงินเพิ่มกรณีมาเช้า 2) ไม่หักเงินหยุมหยิมกรณีสายในเกณฑ์ผ่อนผัน
+              effectiveCinH = sr.detectedShift; 
+          }
+      }
+
+
+      let forceOverride = false;
+      let forcedBase = 0;
+      let forcedNote = '';
+
+      const cl = GLOBAL_RULES?.dynamicShift?.cleanerSpecial;
+      let clIds = cl ? (cl.ids||[]) : ['21'];
+      
+      if (clIds.includes(String(eid))) {
+          let cRate = cl && cl.sundayRate !== undefined ? cl.sundayRate : 190;
+          let cEarly = cl && cl.earlyOutCutoff !== undefined ? cl.earlyOutCutoff : 17;
+          let cBase = cl && cl.baseHrs !== undefined ? cl.baseHrs : 9;
+
+          if (isSunday(dateStr) && (checkin !== '' || checkout !== '')) {
+              forceOverride = true;
+              forcedBase = cRate;
+              forcedNote = `ทำความสะอาด (${forcedBase}บ.)`;
+          } else if (!isSunday(dateStr) && coutH !== null && cEarly != null && coutH < cEarly && cinH !== null) {
+              forceOverride = true;
+              const h = coutH - (effectiveCinH !== null ? effectiveCinH : 8);
+              forcedBase = Math.round(Math.max(0, h) * (srBase.d / cBase) * 100) / 100;
+              
+              const hStr = String(Math.floor(cEarly)).padStart(2, '0');
+              const mStr = String(Math.round((cEarly % 1)*60)).padStart(2, '0');
+              forcedNote = `ออกก่อน ${hStr}:${mStr}`;
+          }
+      }
+
+      // ── EARLY CHECKOUT / SHIFT SWAP BY CHECKOUT TIME ──
+      // ±30 นาที (0.5h) tolerance รอบ shift end ที่ถูกต้อง
+      // - ใกล้ own shift end → ปกติ (existing logic ต่อ)
+      // - ใกล้ 17:00 (เฉพาะ morning-shift, ss<15) → สลับกะ 240 บาท
+      // - ไม่ใกล้เวลาไหนเลย && ออกก่อน shift end → คิดตามชั่วโมงจริง
+      // Guard: ข้าม ถ้าเป็น PT, มี forceOverride, หรือ cin-based swap to 17 แล้ว
+      if (srBase.t !== 'พาร์ทไทม์' && !forceOverride && cinH !== null && coutH !== null
+          && !(sr.detectedShift === 17 && srBase.ss !== 17)) {
+          const _ecCfg = GLOBAL_RULES?.dynamicShift?.earlyCheckout;
+          const EARLY_TOL = (_ecCfg?.toleranceMin ?? 30) / 60; // convert minutes to hours
+          const isLocked = ['football', 'kitchen', 'looknum'].includes(srBase.ot);
+          // Normalize cout for overnight comparison
+          const coutHNorm = coutH < cinH ? coutH + 24 : coutH;
+          // Normalize own shift end (dout ≤ 12 = next-day, e.g. dout=2 → 26)
+          let ownShiftEnd = srBase.dout;
+          if (sr.detectedShift && sr.detectedShift !== srBase.ss) {
+              if (sr.detectedShift === 10) ownShiftEnd = 21;
+              if (sr.detectedShift === 15) ownShiftEnd = 24;
+              if (sr.detectedShift === 17) ownShiftEnd = 24;
+          }
+          if (ownShiftEnd !== undefined && ownShiftEnd !== null && ownShiftEnd <= 12) ownShiftEnd += 24;
+          // Check proximity
+          const nearOwnEnd = ownShiftEnd && Math.abs(coutHNorm - ownShiftEnd) <= EARLY_TOL;
+          // 17:00 swap valid only for those doing morning-shift (detectedShift = 10), non-locked, and own end ≠ 17
+          const near17 = !isLocked && sr.detectedShift === 10 && Math.abs(coutHNorm - 17) <= EARLY_TOL && ownShiftEnd !== 17;
+          
+          let aiShopCloseDetected = false;
+          let g = (srBase.ot && srBase.ot !== 'none') ? srBase.ot : 'general';
+          if (autoShopClosed[`${dateStr}_${g}`] && Math.abs(coutHNorm - autoShopClosed[`${dateStr}_${g}`]) <= 1.0) {
+              aiShopCloseDetected = true;
+          }
+          let isShopClosedEarly = false;
+          let shopClosedAiConfidence = false;
+          if (EDITS[k] && EDITS[k].shopClosedEarly !== undefined) {
+              isShopClosedEarly = EDITS[k].shopClosedEarly;
+          } else if (aiShopCloseDetected) {
+              isShopClosedEarly = true;
+              shopClosedAiConfidence = true;
+          }
+
+          if (isShopClosedEarly && !nearOwnEnd) {
+             sr.ot = null;
+             const hStr = String(Math.floor(coutH)).padStart(2, '0');
+             const mStr = String(Math.round((coutH % 1) * 60)).padStart(2, '0');
+             note = (note ? note + ' ' : '') + `ร้านปิดก่อน ${hStr}:${mStr}`;
+             if (shopClosedAiConfidence) note += ' 🤖';
+             r_hasShopClosedStatus = true;
+          } else if (near17 && !nearOwnEnd) {
+              // Checkout ใกล้ 17:00 → ถือว่าสลับกะ PT
+              dayRate = _ecCfg?.swap17Rate ?? 240;
+              sr.ot = null;
+              note = (note ? note + ' ' : '') + '(สลับกะ 17.00)';
+          } else if (!nearOwnEnd && !near17 && ownShiftEnd && coutHNorm < ownShiftEnd) {
+              // Checkout ออกก่อน shift end โดยไม่ใกล้เวลามาตรฐานไหน → คิดตามชั่วโมงจริง
+              const hoursWorked = Math.max(0, coutHNorm - effectiveCinH);
+              const baseForCalc = srBase.t === 'รายเดือน'
+                  ? Math.round(srBase.mo / DAYS_IN_MONTH * 100) / 100
+                  : srBase.d;
+              dayRate = Math.round((baseForCalc / srBase.hrs) * hoursWorked * 100) / 100;
+              sr.ot = null;
+              const hStr = String(Math.floor(coutH)).padStart(2, '0');
+              const mStr = String(Math.round((coutH % 1) * 60)).padStart(2, '0');
+              note = (note ? note + ' ' : '') + `ออกก่อน ${hStr}:${mStr}`;
+              r_hasShopClosedStatus = false;
+          }
+      }
+
+      // PT Special Rules Override
+      if (srBase.t === 'พาร์ทไทม์' && cinH !== null) {
+          const _ptm = GLOBAL_RULES?.dynamicShift?.partTimeMorningReplacement;
+          const _pto = GLOBAL_RULES?.dynamicShift?.parttimeOverride;
+          const ptMorningCutoff = _ptm?.cutoff ?? 12;
+          const ptMorningRate = _ptm?.rate ?? 350;
+          const ptMorningHrs = _ptm?.baseHrs ?? 11;
+          const ptMorningEnd = _ptm?.shiftEndCutoff ?? 21;
+          const ptLateInCutoff = _pto?.lateInCutoff ?? 16;
+          const ptEarlyOutCutoff = _pto?.earlyOutCutoff ?? 18;
+
+          // Priority 1: If PT arrives late (>= 16:30) OR leaves early (<= 18:00), force to PT Override rate (240)
+          if (cinH >= ptLateInCutoff || (coutH !== null && coutH <= ptEarlyOutCutoff)) {
+              dayRate = _pto?.rate ?? 240;
+              sr.ot = null;
+              if (cinH >= ptLateInCutoff) sr.detectedShift = 17;
+
+          // Priority 2: If PT arrives morning (< 12:00)
+          } else if (cinH < ptMorningCutoff) {
+              let actualCout = coutH !== null ? (coutH < cinH ? coutH + 24 : coutH) : 24;
+              if (coutH !== null && actualCout < ptMorningEnd) {
+                  // เข้าเช้า แต่ออกก่อนเวลาเลิกกะ → คิดตาม (rate/hrs) × ชม.จริง
+                  const ptHoursWorked = Math.max(0, actualCout - effectiveCinH);
+                  dayRate = Math.round((ptMorningRate / ptMorningHrs) * ptHoursWorked * 100) / 100;
+                  sr.ot = null;
+                  sr.detectedShift = 10;
+                  const ptHStr = String(Math.floor(coutH)).padStart(2, '0');
+                  const ptMStr = String(Math.round((coutH % 1) * 60)).padStart(2, '0');
+                  note = `(สลับกะ 10.00/ออกก่อน ${ptHStr}:${ptMStr})`;
+              } else {
+                  // เข้าเช้า อยู่จนจบกะเช้า (ออกเลยเวลาเลิกกะ 21:00) -> ได้เต็ม + OT
+                  dayRate = ptMorningRate;
+                  sr.ot = 'morning_pt';
+                  sr.detectedShift = 10;
+                  note = '(ควบกะเช้า)';
+              }
+          }
+      }
+      
+      // Option 1: Penalty for fulltime swapping to 17:00 shift
+      if (srBase.t !== 'พาร์ทไทม์' && cinH !== null) {
+          if (sr.detectedShift === 17 && srBase.ss !== 17 && !['football', 'kitchen', 'looknum'].includes(srBase.ot)) {
+              const _ecSwap = GLOBAL_RULES?.dynamicShift?.earlyCheckout;
+              dayRate = _ecSwap?.swap17Rate ?? 240;
+              sr.ot = null;
+          }
+      }
+
+      // ── PT EVENING EARLY CHECKOUT ──
+      // PT เย็น (cinH >= 16): ถ้าออกก่อน shift end มากกว่า 2 ชม. → คิดตามชั่วโมงจริง
+      // tolerance ±2 ชม. รอบ 24:00 เพื่อรองรับการปิดร้านก่อนเวลา (เช่น ออก 23:00 = ปกติ 240)
+      if (srBase.t === 'พาร์ทไทม์' && !forceOverride && cinH !== null && cinH >= 16 && coutH !== null) {
+          const _ecPtCfg = GLOBAL_RULES?.dynamicShift?.earlyCheckout;
+          const PT_TOL = (_ecPtCfg?.ptToleranceMin ?? 120) / 60; // convert minutes to hours
+          const coutHNorm = coutH < cinH ? coutH + 24 : coutH;
+          let ptShiftEnd = srBase.dout;
+          if (sr.detectedShift && sr.detectedShift !== srBase.ss) {
+              if (sr.detectedShift === 10) ptShiftEnd = 21;
+              if (sr.detectedShift === 15) ptShiftEnd = 24;
+              if (sr.detectedShift === 17) ptShiftEnd = 24;
+          }
+          if (ptShiftEnd !== undefined && ptShiftEnd !== null && ptShiftEnd <= 12) ptShiftEnd += 24;
+          const nearPtEnd = ptShiftEnd && Math.abs(coutHNorm - ptShiftEnd) <= PT_TOL;
+          let aiShopCloseDetected = false;
+          let g = (srBase.ot && srBase.ot !== 'none') ? srBase.ot : 'general';
+          if (autoShopClosed[`${dateStr}_${g}`] && Math.abs(coutHNorm - autoShopClosed[`${dateStr}_${g}`]) <= 1.0) {
+              aiShopCloseDetected = true;
+          }
+          let isShopClosedEarly = false;
+          let shopClosedAiConfidence = false;
+          if (EDITS[k] && EDITS[k].shopClosedEarly !== undefined) {
+              isShopClosedEarly = EDITS[k].shopClosedEarly;
+          } else if (aiShopCloseDetected) {
+              isShopClosedEarly = true;
+              shopClosedAiConfidence = true;
+          }
+
+          if (isShopClosedEarly && !nearPtEnd) {
+             sr.ot = null;
+             const hStr = String(Math.floor(coutH)).padStart(2, '0');
+             const mStr = String(Math.round((coutH % 1) * 60)).padStart(2, '0');
+             note = (note ? note + ' ' : '') + `ร้านปิดก่อน ${hStr}:${mStr}`;
+             if (shopClosedAiConfidence) note += ' 🤖';
+             r_hasShopClosedStatus = true;
+          } else if (!nearPtEnd && ptShiftEnd && coutHNorm < ptShiftEnd) {
+              const hoursWorked = Math.max(0, coutHNorm - effectiveCinH);
+              dayRate = Math.round((srBase.d / srBase.hrs) * hoursWorked * 100) / 100;
+              sr.ot = null;
+              const hStr = String(Math.floor(coutH)).padStart(2, '0');
+              const mStr = String(Math.round((coutH % 1) * 60)).padStart(2, '0');
+              note = (note ? note + ' ' : '') + `ออกก่อน ${hStr}:${mStr}`;
+              r_hasShopClosedStatus = false;
+          }
+      }
+
+      // Auto Shift & Late Detection 
+      if (cinH !== null && sr.detectedShift) {
+          let calculatedLate = (cinH - sr.detectedShift) * 60;
+          lateM = calculatedLate > 0 ? calculatedLate : 0;
+          const empOwnShift = srBase.ss;
+          if (empOwnShift && sr.detectedShift !== empOwnShift && !['football', 'kitchen'].includes(srBase.ot)) {
+              note = (note ? note + ' ' : '') + `(สลับกะ ${sr.detectedShift}.00)`;
+          }
+      }
+      
+      let expectedBase = dayRate;
+      let deduct = 0;
+      let otH = 0;
+      
+      let isOffDay = false;
+      if (EDITS[k] && EDITS[k].isOffDay) {
+          isOffDay = true;
+      }
+
+      const dNow = new Date();
+      const localTodayStr = dNow.getFullYear() + '-' + String(dNow.getMonth()+1).padStart(2, '0') + '-' + String(dNow.getDate()).padStart(2, '0');
+
+      if (cinH === null && coutH === null) {
+          if (srBase.t === 'รายเดือน') {
+              if (isOffDay) {
+                  if (dateStr > localTodayStr) {
+                      dayRate = 0;
+                      expectedBase = 0;
+                      note = (note ? note + ' ' : '') + 'วันหยุดพักผ่อน (ล่วงหน้า)';
+                  } else {
+                      note = (note ? note + ' ' : '') + 'วันหยุดพักผ่อน';
+                  }
+              } else {
+                  dayRate = 0;
+                  expectedBase = 0;
+                  note = (note ? note + ' ' : '') + 'ขาดงาน';
+              }
+          } else {
+              dayRate = 0;
+              expectedBase = 0;
+          }
+      } else {
+          if (cinH === null) {
+              dayRate = 0;
+              note = (note ? note + ' ' : '') + 'รอใส่เวลาเข้า';
+          } else if (coutH === null) {
+              dayRate = 0;
+              note = (note ? note + ' ' : '') + 'รอใส่เวลาออก';
+          } else {
+              if (forceOverride) {
+                  dayRate = forcedBase;
+                  note = (note ? note + ' ' : '') + forcedNote;
+                  lateM = 0;
+                  sr.ot = null;
+              }
+          }
+          deduct = calcLate(lateM, sr, cinH);
+          otH = calcOt(eid, cinH, coutH, sr);
+      }
+      
+      let dayErrand = 0;
+      if (ERRANDS[eid]) {
+          const eList = ERRANDS[eid].filter(e => e.date === dateStr);
+          eList.forEach(e => {
+              dayErrand += parseFloat(e.amount) || 0;
+              note = (note ? note + ' ' : '') + `(ธุระ ${e.start}-${e.end})`;
+          });
+      }
+      deduct += dayErrand;
+      
+      const rule = DEPT_RULES[sr.ot] || {};
+      const empOtRate = rule.rate || sr.otRate || 40;
+      const otMoney = Math.round(otH*empOtRate*100)/100;
+      let actualOtMoney = otMoney;
+      let manualOt = !!rule.reqApprove;
+      
+      const r = {
+        date:dateStr,cin:checkin,cout:checkout,late:Math.round(lateM),
+        base:dayRate, expectedBase:expectedBase, ot:actualOtMoney, deduct,
+        note, adminNote: '', locked:false,possibleOt:otMoney,manualOt,srOt:sr.ot,srDout:sr.dout,
+        origBase: dayRate, origOt: actualOtMoney, origDeduct: deduct, origCin: d.cin, origCout: d.cout,
+        isShopClosed: r_hasShopClosedStatus
+      };
+      
+      if (EDITS[k]) {
+        if(EDITS[k].base!==undefined) r.base=EDITS[k].base;
+        if(EDITS[k].ot!==undefined) r.ot=EDITS[k].ot;
+        if(EDITS[k].deduct!==undefined) r.deduct=EDITS[k].deduct;
+        if(EDITS[k].adminNote!==undefined) r.adminNote=EDITS[k].adminNote;
+      }
+      
+      empRows.push(r);
+    }
+    
+    allData.push({
+      id: eid,
+      name: EMP_NAMES[eid]||'?',
+      type: srBase.t,
+      rate: srBase.t==='รายเดือน' ? `${srBase.mo.toLocaleString()} บ./เดือน` : `${srBase.d} บ./วัน`,
+      rows: empRows
+    });
+  }
+  data = allData; // Replace global data
+  if (!skipRender) renderAll();
+}
+
+function fmt(n){return Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function calcEmpTotal(emp){
+  let tBase=0,tOt=0,tDeduct=0;
+  emp.rows.forEach(r=>{tBase+=r.base; tOt+=r.ot; tDeduct+=r.deduct;});
+  let tAdvance = (ADVANCES[emp.id] || []).reduce((sum, a) => sum + (parseFloat(a.amount) || 0), 0);
+  return {base:tBase,ot:tOt,deduct:tDeduct,advance:tAdvance,net:tBase+tOt-tDeduct-tAdvance};
+}
+function buildChips(emp){
+  const t=calcEmpTotal(emp);
+  const gross = t.base + t.ot - t.deduct;
+  return `
+    <div class="chip chip-base">ฐาน ${fmt(t.base)}</div>
+    <div class="chip chip-ot">OT ${fmt(t.ot)}</div>
+    <div class="chip chip-deduct">หัก ${fmt(t.deduct)}</div>
+    <div class="chip" style="background:#eef2ff;color:#4f46e5;border-color:#e0e7ff;font-weight:600;">รวม ${fmt(gross)}</div>
+    ${t.advance > 0 ? `<div class="chip chip-advance">เบิก ${fmt(t.advance)}</div>` : ''}
+    <div class="chip chip-total">รับสุทธิ ${fmt(t.net)}</div>
+  `;
+}
+function buildTfoot(emp){
+  const t=calcEmpTotal(emp);
+  let deductHtml = fmt(t.deduct);
+  if (t.advance > 0) {
+      deductHtml += `<br><span style="font-size:0.75rem;color:var(--yellow);font-weight:normal;">(เบิก: ${fmt(t.advance)})</span>`;
+  }
+  return `<tr class="tfoot-row"><td colspan="4" style="text-align:right">รวมสุทธิ</td>
+    <td class="td-base">${fmt(t.base)}</td><td class="td-ot">${fmt(t.ot)}</td>
+    <td class="td-deduct">${deductHtml}</td><td class="total-net">${fmt(t.net)}</td><td></td></tr>`;
+}
+function buildRow(emp,r,ri){
+  const net=Math.round((r.base+r.ot-r.deduct)*100)/100;
+  const isModified=(r.base!==r.origBase||r.ot!==r.origOt||r.deduct!==r.origDeduct||r.cout!==r.origCout||r.cin!==r.origCin);
+  const locked=r.locked;
+  function editCell(field,cls){
+    const val=r[field];
+    if(locked) return `<span style="color:var(--muted)">${fmt(val)}</span>`;
+    const mod=(val!==r['orig'+field.charAt(0).toUpperCase()+field.slice(1)])?'modified':'';
+    return `<span class="editable ${mod}" contenteditable="true"
+      onfocus="if(this.textContent==='0.00'||this.textContent==='0')this.textContent=''"
+      onblur="cellEdit('${emp.id}',${ri},'${field}',this)"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+      data-orig="${r['orig'+field.charAt(0).toUpperCase()+field.slice(1)]}"
+    >${fmt(val)}</span>`;
+  }
+  function editTimeCell(field){
+    const val=r[field];
+    if(locked) return `<span style="color:var(--muted)">${val||'-'}</span>`;
+    const mod=(val!==r['orig'+field.charAt(0).toUpperCase()+field.slice(1)])?'modified':'';
+    return `<span class="editable ${mod}" contenteditable="true"
+      onfocus="if(this.textContent==='-')this.textContent=''"
+      onblur="timeEdit('${emp.id}',${ri},'${field}',this)"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+      data-orig="${r['orig'+field.charAt(0).toUpperCase()+field.slice(1)]}"
+    >${val||'-'}</span>`;
+  }
+  let checkboxHtml = '';
+  if (r.manualOt && r.possibleOt > 0 && !locked) {
+    const isChecked = r.ot > 0 ? 'checked' : '';
+    checkboxHtml += `<label class="ot-label" style="font-size:0.75rem;margin-left:6px;padding:2px 6px;border-radius:4px;background:#f0fdf4;border:1px solid #dcfce7;color:#16a34a;display:inline-block"><input type="checkbox" class="ot-check" ${isChecked} onchange="toggleManualOt('${emp.id}',${ri},this,${r.possibleOt})"> คิด OT (${r.possibleOt}บ.)</label>`;
+  }
+  
+  function editNoteCell() {
+    return `<div class="editable" contenteditable="true" 
+      style="min-height:20px; outline:none; font-size:0.85rem; color:var(--blue); border-bottom:1px dashed #cbd5e1; display:inline-block; min-width:100px; text-align:left;"
+      onblur="noteEdit('${emp.id}',${ri},this)"
+      placeholder="พิมพ์โน้ต.."
+    >${r.adminNote || ''}</div>`;
+  }
+  
+  return `<tr id="row-${emp.id}-${ri}">
+    <td class="td-date">${r.date}</td>
+    <td class="td-time" style="color:var(--blue)">${editTimeCell('cin')}</td>
+    <td class="td-time" style="color:var(--blue)">${editTimeCell('cout')}</td>
+    <td class="td-late">${r.late>10?r.late:''}</td>
+    <td class="td-base">${editCell('base','td-base')}</td>
+    <td class="td-ot">${editCell('ot','td-ot')}</td>
+    <td class="td-deduct">${editCell('deduct','td-deduct')}</td>
+    <td class="td-net">${fmt(net)}</td>
+    <td class="note-cell">
+      <div style="font-size:0.8rem; color:var(--muted); margin-bottom:4px; display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+        <span style="line-height:1.2;">${r.note||''}</span> ${checkboxHtml}
+        ${(r.note && (r.note.includes('ออกก่อน') || r.note.includes('ร้านปิดก่อน')) && !locked) ? 
+           `<button class="btn btn-outline" style="font-size:0.7rem; padding:2px 6px; ${r.isShopClosed ? 'color:var(--yellow);border-color:var(--yellow);background:#fefce8;' : ''}" onclick="toggleShopClosed(event, '${emp.id}', '${r.date}', ${r.isShopClosed})">🌙 ${r.isShopClosed?'ยกเลิกร้านปิด':'ร้านปิดก่อน'}</button>` : ''}
+      </div>
+      ${editNoteCell()}
+      ${isModified&&!locked?' <button class="reset-btn" onclick="resetRow(event,\''+emp.id+'\','+ri+')" style="margin-top:4px">↩ Reset</button>':''}
+    </td>
+  </tr>`;
+}
+function buildSummary(){
+  let gt=0, sumH='';
+  data.forEach(emp=>{
+    const t=calcEmpTotal(emp); gt+=t.net;
+    sumH+=`<div class="summary-card">
+      <div class="s-label">${emp.name} ${emp.id==='1'?'(JET)':''}</div>
+      <div class="s-value s-green">฿${fmt(t.net)}</div>
+    </div>`;
+  });
+  document.getElementById('summary-bar').innerHTML=sumH;
+  document.getElementById('grand-total').textContent='฿'+fmt(gt);
+  document.getElementById('header-subtitle').textContent = `${getMonthName()} · พนักงาน ${data.length} คน · แก้ไขได้`;
+}
+function updateGrand(){
+  let gt=0; data.forEach(emp=>gt+=calcEmpTotal(emp).net);
+  document.getElementById('grand-total').textContent='฿'+fmt(gt);
+}
+function renderAll(){
+  const m=document.getElementById('main');
+  m.innerHTML='';
+  data.forEach(emp=>{
+    const card=document.createElement('div');
+    card.className='emp-card';
+    card.innerHTML=`<div class="emp-header" onclick="toggle('${emp.id}')">
+      <div class="emp-avatar">${EMP_NAMES[emp.id]?EMP_NAMES[emp.id].substring(0,2).toUpperCase():emp.id}</div>
+      <div style="flex:1; min-width:0; display:flex; align-items:center; gap:10px; flex-wrap:nowrap;">
+        <div style="flex-shrink:0;">
+          <div class="emp-name">#${emp.id} ${emp.name}</div>
+          <div class="emp-meta">${emp.rate} · ${emp.rows.length} วัน</div>
+        </div>
+        <div style="display:flex; gap:6px; flex-shrink:0;" onclick="event.stopPropagation()">
+          ${emp.type === 'รายเดือน' ? `<button class="btn btn-outline" style="font-size:0.72rem;padding:2px 6px;border-color:var(--blue);color:var(--blue);" onclick="openCalendarModal(event,'${emp.id}')">🗓️ วันหยุด</button>` : ''}
+          <button class="btn btn-outline" style="font-size:0.72rem;padding:2px 6px;border-color:var(--yellow);color:var(--yellow);" onclick="openAdvanceModal(event,'${emp.id}')">💸 เบิก</button>
+          <button class="btn btn-outline" style="font-size:0.72rem;padding:2px 6px;border-color:var(--red);color:var(--red);" onclick="openErrandModal(event,'${emp.id}')">🏃 ธุระ</button>
+        </div>
+      </div>
+      <div class="emp-chips" id="chips-${emp.id}" style="display:flex;gap:6px;align-items:center;flex-shrink:0;">${buildChips(emp)}</div>
+      <div class="emp-toggle" id="toggle-${emp.id}">▼</div>
+    </div>
+    <div class="emp-body" id="body-${emp.id}">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="text-align:left">วันที่</th><th style="text-align:left">เข้า</th><th style="text-align:left">ออก</th><th style="text-align:left">สาย(น.)</th>
+            <th>ฐาน</th><th>OT</th><th>หัก</th><th>รวม</th>
+            <th style="text-align:left;min-width:200px">หมายเหตุระบบ / แอดมิน</th>
+          </tr></thead>
+          <tbody id="tbody-${emp.id}">
+            ${emp.rows.map((r,i)=>buildRow(emp,r,i)).join('')}
+          </tbody>
+          <tfoot id="tfoot-${emp.id}">${buildTfoot(emp)}</tfoot>
+        </table>
+      </div>
+    </div>`;
+    m.appendChild(card);
+  });
+  buildSummary();
+}
+
+function toggle(eid){
+  const body=document.getElementById('body-'+eid);
+  const tog=document.getElementById('toggle-'+eid);
+  body.classList.toggle('open');
+  tog.style.transform=body.classList.contains('open')?'rotate(180deg)':'';
+}
+function expandAll(){document.querySelectorAll('.emp-body').forEach(b=>b.classList.add('open'));document.querySelectorAll('.emp-toggle').forEach(t=>t.style.transform='rotate(180deg)');}
+function collapseAll(){document.querySelectorAll('.emp-body').forEach(b=>b.classList.remove('open'));document.querySelectorAll('.emp-toggle').forEach(t=>t.style.transform='');}
+
+function toggleManualOt(eid, ri, el, possibleOt) {
+  const row = document.getElementById('row-'+eid+'-'+ri);
+  const otCell = row.querySelector('.td-ot .editable');
+  otCell.textContent = fmt(el.checked ? possibleOt : 0);
+  cellEdit(eid, ri, 'ot', otCell);
+}
+
+let currentCalEid = null;
+let currentCalDays = {}; 
+
+function openCalendarModal(e, eid) {
+  e.stopPropagation();
+  const emp = data.find(x => x.id === eid);
+  if (!emp) return;
+  currentCalEid = eid;
+  currentCalDays = {};
+  
+  document.getElementById('cal-emp-name').textContent = emp.name;
+  document.getElementById('cal-month').textContent = getMonthName();
+  
+  for (let day = 1; day <= DAYS_IN_MONTH; day++) {
+    const dateStr = `${CURRENT_MONTH}-${day.toString().padStart(2, '0')}`;
+    const key = eid + '_' + dateStr;
+    if (EDITS[key] && EDITS[key].isOffDay) {
+        currentCalDays[dateStr] = true;
+    }
+  }
+  
+  renderCalendarGrid();
+  document.getElementById('calendar-modal').classList.add('show');
+}
+
+function renderCalendarGrid() {
+    let html = '';
+    const headerNames = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'];
+    
+    // Add day headers
+    headerNames.forEach(name => {
+        html += `<div style="text-align:center; font-weight:bold; color:var(--muted); font-size:0.9rem; padding-bottom:8px;">${name}</div>`;
+    });
+
+    const d1 = new Date(`${CURRENT_MONTH}-01`);
+    let emptyDays = d1.getDay() - 1;
+    if (emptyDays < 0) emptyDays = 6; // Sunday becomes index 6
+
+    // Add empty slots for the first week
+    for (let i = 0; i < emptyDays; i++) {
+        html += `<div></div>`;
+    }
+
+    for (let day = 1; day <= DAYS_IN_MONTH; day++) {
+        const dateStr = `${CURRENT_MONTH}-${day.toString().padStart(2, '0')}`;
+        const activeClass = currentCalDays[dateStr] ? 'active' : '';
+        html += `<div class="cal-day ${activeClass}" onclick="toggleCalDay('${dateStr}')">
+            <div class="cal-num">${day}</div>
+        </div>`;
+    }
+    document.getElementById('calendar-grid').innerHTML = html;
+}
+
+function toggleCalDay(dateStr) {
+    currentCalDays[dateStr] = !currentCalDays[dateStr];
+    renderCalendarGrid();
+}
+
+function closeCalendarModal() {
+    document.getElementById('calendar-modal').classList.remove('show');
+}
+
+function saveCalendarModal() {
+    if (!currentCalEid) return;
+    for (let day = 1; day <= DAYS_IN_MONTH; day++) {
+        const dateStr = `${CURRENT_MONTH}-${day.toString().padStart(2, '0')}`;
+        const key = currentCalEid + '_' + dateStr;
+        if (currentCalDays[dateStr]) {
+            if (!EDITS[key]) EDITS[key] = {};
+            EDITS[key].isOffDay = true;
+        } else {
+            if (EDITS[key] && EDITS[key].isOffDay) {
+                EDITS[key].isOffDay = false;
+            }
+        }
+    }
+    saveEdits();
+    
+    // Remember which accordions are open so we don't collapse them all on refresh
+    const openModals = Array.from(document.querySelectorAll('.emp-body.open')).map(el => el.id.replace('body-', ''));
+    
+    calculateAllData();
+    closeCalendarModal();
+    showToast('บันทึกวันหยุดปฏิทินสำเร็จ');
+    
+    // Restore open accordions
+    openModals.forEach(id => {
+        const body = document.getElementById('body-'+id);
+        const tog = document.getElementById('toggle-'+id);
+        if (body && tog) {
+            body.classList.add('open');
+            tog.style.transform = 'rotate(180deg)';
+        }
+    });
+}
+let currentAdvEid = null;
+
+function openAdvanceModal(e, eid) {
+  e.stopPropagation();
+  const emp = data.find(x => x.id === eid);
+  if (!emp) return;
+  currentAdvEid = eid;
+  
+  document.getElementById('adv-emp-name').textContent = emp.name;
+  
+  // Default to today if within current month, else first day of current month
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  const defaultDate = todayStr.startsWith(CURRENT_MONTH) ? todayStr : `${CURRENT_MONTH}-01`;
+  
+  const advDateInput = document.getElementById('adv-date');
+  advDateInput.value = defaultDate;
+  
+  // Trigger onchange to update the display formatting
+  advDateInput.dispatchEvent(new Event('change'));
+  
+  document.getElementById('adv-amount').value = '';
+  document.getElementById('adv-note').value = '';
+  
+  renderAdvanceList();
+  document.getElementById('advance-modal').classList.add('show');
+}
+
+function closeAdvanceModal() {
+  document.getElementById('advance-modal').classList.remove('show');
+}
+
+function renderAdvanceList() {
+  if (!currentAdvEid) return;
+  
+  const emp = data.find(x => x.id === currentAdvEid);
+  if (!emp) return;
+  
+  const t = calcEmpTotal(emp);
+  // Re-add the current advance total to find the maximum possible they could have drawn
+  const maxAllowed = t.net + t.advance; 
+  document.getElementById('adv-max-amount').textContent = '฿' + fmt(Math.max(0, maxAllowed - t.advance));
+  
+  const advances = ADVANCES[currentAdvEid] || [];
+  let html = '';
+  advances.forEach((adv, idx) => {
+    const dParts = adv.date.split('-');
+    const dShow = dParts.length === 3 ? `${dParts[2]}/${dParts[1]}/${dParts[0]}` : adv.date;
+    html += `<tr>
+      <td>${dShow}</td>
+      <td style="color:var(--muted);font-size:0.8rem">${adv.note}</td>
+      <td style="text-align:right;color:var(--yellow);font-weight:600">฿${fmt(adv.amount)}</td>
+      <td style="text-align:center">
+        <button class="btn btn-outline" style="padding:2px 6px;color:var(--red);border-color:var(--red);" onclick="deleteAdvance(${idx})">x</button>
+      </td>
+    </tr>`;
+  });
+  
+  if (advances.length === 0) {
+    html = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">ไม่มีประวัติการเบิกเงิน</td></tr>`;
+  }
+  
+  document.getElementById('adv-list-tbody').innerHTML = html;
+}
+
+function addAdvance() {
+  if (!currentAdvEid) return;
+  const date = document.getElementById('adv-date').value;
+  const amount = parseFloat(document.getElementById('adv-amount').value);
+  const noteObj = document.getElementById('adv-note').value;
+  
+  if (!date) {
+    alert('กรุณาเลือกวันที่เบิก');
+    return;
+  }
+  
+  if (isNaN(amount) || amount <= 0) {
+    alert('กรุณากรอกจำนวนเงินให้ถูกต้อง');
+    return;
+  }
+  
+  const emp = data.find(x => x.id === currentAdvEid);
+  const t = calcEmpTotal(emp);
+  
+  if (amount > t.net) {
+    alert(`ไม่สามารถเบิกได้!\nยอดเบิก (${fmt(amount)} บ.) มากกว่ายอดสุทธิที่เหลือ (${fmt(t.net)} บ.)`);
+    return;
+  }
+  
+  if (!ADVANCES[currentAdvEid]) ADVANCES[currentAdvEid] = [];
+  ADVANCES[currentAdvEid].push({ date: date, amount, note: noteObj });
+  saveAdvances();
+  
+  // Partial update — do NOT call calculateAllData() with renderAll to avoid collapsing accordions
+  calculateAllData(true);
+  const empUpdated = data.find(x => x.id === currentAdvEid);
+  if (empUpdated) {
+    document.getElementById('chips-'+currentAdvEid).innerHTML = buildChips(empUpdated);
+    document.getElementById('tfoot-'+currentAdvEid).innerHTML = buildTfoot(empUpdated);
+  }
+  buildSummary(); updateGrand();
+  
+  renderAdvanceList();
+  document.getElementById('adv-amount').value = '';
+  document.getElementById('adv-note').value = '';
+  showToast('บันทึกการเบิกเงินสำเร็จ');
+}
+
+function deleteAdvance(idx) {
+  if (!currentAdvEid || !ADVANCES[currentAdvEid]) return;
+  
+  if (confirm('คุณต้องการลบรายการเบิกเงินนี้ใช่หรือไม่?')) {
+    ADVANCES[currentAdvEid].splice(idx, 1);
+    saveAdvances();
+    
+    // Partial update — avoid full renderAll to keep accordions open
+    calculateAllData(true);
+    const empUpdated = data.find(x => x.id === currentAdvEid);
+    if (empUpdated) {
+      document.getElementById('chips-'+currentAdvEid).innerHTML = buildChips(empUpdated);
+      document.getElementById('tfoot-'+currentAdvEid).innerHTML = buildTfoot(empUpdated);
+    }
+    buildSummary(); updateGrand();
+    
+    renderAdvanceList();
+    showToast('ลบรายการเบิกสำเร็จ');
+  }
+}
+
+let currentErrEid = null;
+function openErrandModal(e, eid) {
+  e.stopPropagation();
+  const emp = data.find(x => x.id === eid);
+  if (!emp) return;
+  currentErrEid = eid;
+  
+  document.getElementById('err-emp-name').textContent = emp.name;
+
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  const defaultDate = todayStr.startsWith(CURRENT_MONTH) ? todayStr : `${CURRENT_MONTH}-01`;
+  
+  const errDateInput = document.getElementById('err-date');
+  errDateInput.value = defaultDate;
+  
+  // Trigger onchange to update the display format
+  errDateInput.dispatchEvent(new Event('change'));
+  
+  document.getElementById('err-start').value = '';
+  document.getElementById('err-end').value = '';
+  document.getElementById('err-amount').value = '';
+  document.getElementById('err-mins-lbl').textContent = '';
+  
+  renderErrandList();
+  document.getElementById('errand-modal').classList.add('show');
+}
+
+function closeErrandModal() {
+  document.getElementById('errand-modal').classList.remove('show');
+}
+
+function renderErrandList() {
+  if (!currentErrEid) return;
+  const errands = ERRANDS[currentErrEid] || [];
+  let html = '';
+  errands.forEach((err, idx) => {
+    const dParts = err.date.split('-');
+    const dShow = dParts.length === 3 ? `${dParts[2]}/${dParts[1]}/${dParts[0]}` : err.date;
+    let sStr = err.start.replace(':', '.');
+    let eStr = err.end.replace(':', '.');
+    html += `<tr>
+      <td>${dShow}</td>
+      <td style="color:var(--muted);font-size:0.8rem">${sStr}-${eStr} (${err.mins} น.)</td>
+      <td style="color:var(--red);font-weight:600;text-align:right;">฿${fmt(err.amount)}</td>
+      <td style="text-align:center">
+        <button class="btn btn-outline" style="padding:2px 6px;color:var(--red);border-color:var(--red);" onclick="deleteErrand(${idx})">x</button>
+      </td>
+    </tr>`;
+  });
+  if (errands.length === 0) {
+    html = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">ไม่มีประวัติการขอไปทำธุระ</td></tr>`;
+  }
+  document.getElementById('err-list-tbody').innerHTML = html;
+}
+
+function calcErrand() {
+  if (!currentErrEid) return;
+  const emp = data.find(x => x.id === currentErrEid);
+  if (!emp) return;
+  const startStr = document.getElementById('err-start').value;
+  const endStr = document.getElementById('err-end').value;
+  if (!startStr || !endStr) return;
+  
+  const s = parseH(startStr);
+  let e = parseH(endStr);
+  if (s === null || e === null) return;
+  
+  if (e < s) e += 24;
+  const mins = Math.round((e - s) * 60);
+  document.getElementById('err-mins-lbl').textContent = `(${mins} นาที)`;
+  
+  const srBase = SHIFT[currentErrEid];
+  let ratePerMin = 0;
+  if (srBase) {
+    let rate = 40;
+    if (srBase.t === 'รายเดือน') {
+      ratePerMin = (srBase.mo / DAYS_IN_MONTH) / srBase.hrs / 60;
+    } else {
+      ratePerMin = srBase.d / srBase.hrs / 60;
+    }
+  }
+  
+  const amount = Math.round(mins * ratePerMin * 100) / 100;
+  document.getElementById('err-amount').value = amount;
+}
+
+function addErrand() {
+  if (!currentErrEid) return;
+  const dateVal = document.getElementById('err-date').value;
+  const startVal = document.getElementById('err-start').value;
+  const endVal = document.getElementById('err-end').value;
+  const amountObj = document.getElementById('err-amount').value;
+  
+  if (!dateVal || !startVal || !endVal) {
+    alert('กรุณากรอกวันที่ และเวลาให้ครบ');
+    return;
+  }
+  const amount = parseFloat(amountObj);
+  if (isNaN(amount) || amount < 0) {
+    alert('ยอดเงินหักไม่ถูกต้อง');
+    return;
+  }
+  
+  const s = parseH(startVal);
+  let e = parseH(endVal);
+  if (s === null || e === null) {
+    alert('รูปแบบเวลาไม่ถูกต้อง (เช่น 15.00)');
+    return;
+  }
+  
+  if (e < s) e += 24;
+  const mins = Math.round((e - s) * 60);
+  
+  if (!ERRANDS[currentErrEid]) ERRANDS[currentErrEid] = [];
+  ERRANDS[currentErrEid].push({ date: dateVal, start: startVal, end: endVal, mins, amount });
+  saveErrands();
+  
+  calculateAllData(true);
+  const empUpdated = data.find(x => x.id === currentErrEid);
+  if (empUpdated) {
+    document.getElementById('chips-'+currentErrEid).innerHTML = buildChips(empUpdated);
+    document.getElementById('tfoot-'+currentErrEid).innerHTML = buildTfoot(empUpdated);
+    const tbody = document.getElementById('tbody-'+currentErrEid);
+    if(tbody) {
+      // Preserve input focus if needed, but safe to fully replace rows
+      tbody.innerHTML = empUpdated.rows.map((r,i)=>buildRow(empUpdated,r,i)).join('');
+    }
+  }
+  buildSummary(); updateGrand();
+  
+  renderErrandList();
+  document.getElementById('err-start').value = '';
+  document.getElementById('err-end').value = '';
+  document.getElementById('err-amount').value = '';
+  document.getElementById('err-mins-lbl').textContent = '';
+  showToast('บันทึกธุระสำเร็จ');
+}
+
+function deleteErrand(idx) {
+  if (!currentErrEid || !ERRANDS[currentErrEid]) return;
+  if (confirm('คุณต้องการลบรายการธุระนี้ใช่หรือไม่?')) {
+    ERRANDS[currentErrEid].splice(idx, 1);
+    saveErrands();
+    
+    calculateAllData(true);
+    const empUpdated = data.find(x => x.id === currentErrEid);
+    if (empUpdated) {
+      document.getElementById('chips-'+currentErrEid).innerHTML = buildChips(empUpdated);
+      document.getElementById('tfoot-'+currentErrEid).innerHTML = buildTfoot(empUpdated);
+      const tbody = document.getElementById('tbody-'+currentErrEid);
+      if(tbody) tbody.innerHTML = empUpdated.rows.map((r,i)=>buildRow(empUpdated,r,i)).join('');
+    }
+    buildSummary(); updateGrand();
+    
+    renderErrandList();
+    showToast('ลบรายการสำเร็จ');
+  }
+}
+
+function timeEdit(eid, ri, field, el){
+  let emp=data.find(e=>e.id===eid);
+  let r=emp.rows[ri];
+  const raw=el.textContent.trim().replace('.', ':');
+  
+  const key = eid + '_' + r.date;
+  if (!EDITS[key]) EDITS[key] = {};
+  
+  if (raw === '-' || raw === '') {
+    EDITS[key][field] = '';
+  } else if (/^\d{1,2}:\d{2}$/.test(raw)) {
+    EDITS[key][field] = raw;
+  } else {
+    el.textContent = r[field] || '-';
+    return;
+  }
+  
+  saveEdits();
+  calculateAllData(true); // Full re-calc, NO renderAll
+  
+  emp = data.find(e=>e.id===eid);
+  r = emp.rows[ri];
+  
+  const tbody = document.getElementById('tbody-'+eid);
+  const rows = tbody.querySelectorAll('tr');
+  rows[ri].outerHTML = buildRow(emp, r, ri);
+  
+  document.getElementById('tfoot-'+eid).innerHTML=buildTfoot(emp);
+  document.getElementById('chips-'+eid).innerHTML=buildChips(emp);
+  buildSummary(); updateGrand();
+  showToast('อัปเดตเวลา ' + r.date);
+}
+
+function cellEdit(eid, ri, field, el){
+  let emp=data.find(e=>e.id===eid);
+  let r=emp.rows[ri];
+  const raw=el.textContent.replace(/,/g,'').trim();
+  const val=parseFloat(raw);
+  if(isNaN(val)||val<0){el.textContent=fmt(r[field]);return;}
+  
+  const key = eid + '_' + r.date;
+  if (!EDITS[key]) EDITS[key] = {};
+  EDITS[key][field] = Math.round(val*100)/100;
+  saveEdits();
+  
+  calculateAllData(true); // Full re-calc, NO renderAll
+  
+  emp = data.find(e=>e.id===eid);
+  r = emp.rows[ri];
+  
+  const tbody = document.getElementById('tbody-'+eid);
+  const rows = tbody.querySelectorAll('tr');
+  rows[ri].outerHTML = buildRow(emp, r, ri);
+  
+  document.getElementById('tfoot-'+eid).innerHTML=buildTfoot(emp);
+  document.getElementById('chips-'+eid).innerHTML=buildChips(emp);
+  buildSummary(); updateGrand();
+  showToast('แก้ไข ' + r.date + ' ' + field);
+}
+
+function noteEdit(eid, ri, el){
+  const emp = data.find(e=>e.id===eid);
+  const r = emp.rows[ri];
+  const raw = el.textContent.trim();
+  r.adminNote = raw;
+  
+  const key = eid + '_' + r.date;
+  if (!EDITS[key]) EDITS[key] = {};
+  EDITS[key].adminNote = raw;
+  saveEdits();
+  showToast('บันทึกโน้ต ' + r.date);
+}
+
+function resetRow(e,eid,ri){
+  e.stopPropagation();
+  let emp=data.find(x=>x.id===eid);
+  let r=emp.rows[ri];
+  const key = eid + '_' + r.date;
+  delete EDITS[key];
+  saveEdits();
+  
+  calculateAllData(true); // Full re-calc, NO renderAll
+  
+  emp = data.find(x=>x.id===eid);
+  r = emp.rows[ri];
+  
+  const tbody = document.getElementById('tbody-'+eid);
+  const rows = tbody.querySelectorAll('tr');
+  rows[ri].outerHTML = buildRow(emp, r, ri);
+  
+  document.getElementById('tfoot-'+eid).innerHTML=buildTfoot(emp);
+  document.getElementById('chips-'+eid).innerHTML=buildChips(emp);
+  buildSummary(); updateGrand();
+  
+  showToast('รีเซตค่า ' + r.date);
+}
+
+function toggleShopClosed(e, eid, dateStr, currentVal) {
+  e.stopPropagation();
+  const key = eid + '_' + dateStr;
+  if (!EDITS[key]) EDITS[key] = {};
+  EDITS[key].shopClosedEarly = !currentVal;
+  
+  // If toggling ON, clear any locked manual base/deduct so it calculates fresh
+  if (!currentVal) {
+    delete EDITS[key].base;
+    delete EDITS[key].deduct;
+  }
+  
+  saveEdits();
+
+  calculateAllData(true); // Full re-calc, NO renderAll
+
+  let emp = data.find(x=>x.id===eid);
+  let ri = emp.rows.findIndex(x=>x.date===dateStr);
+  let r = emp.rows[ri];
+  
+  const tbody = document.getElementById('tbody-'+eid);
+  if (tbody) {
+      const rows = tbody.querySelectorAll('tr');
+      if (rows[ri]) rows[ri].outerHTML = buildRow(emp, r, ri);
+  }
+  
+  const tfoot = document.getElementById('tfoot-'+eid);
+  if (tfoot) tfoot.innerHTML=buildTfoot(emp);
+  
+  const chips = document.getElementById('chips-'+eid);
+  if (chips) chips.innerHTML=buildChips(emp);
+  
+  buildSummary(); updateGrand();
+  showToast(r.isShopClosed ? 'ทำเครื่องหมายร้านปิดก่อน' : 'ยกเลิกร้านปิดก่อน');
+}
+
+function resetAll(){
+  if(!confirm('ลบการแก้ไขตารางทั้งหมดกลับเป็นค่าเริ่มต้นไหม?'))return;
+  EDITS = {};
+  saveEdits();
+  calculateAllData();
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent='✅ '+msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function exportCSV(){
+  const lines=[['#','ชื่อ','ประเภท','อัตรา','วันที่','เข้า','ออก','สาย(นาที)','ฐาน','OT','หัก','เบิก(รายวัน)','รวม/วัน','โน้ตแอดมิน','โน้ตระบบ']];
+  data.forEach(emp=>{
+    const advances = ADVANCES[emp.id] || [];
+    emp.rows.forEach(r=>{
+      // Sum advances for this specific date
+      const dayAdv = advances.filter(a => a.date === r.date).reduce((sum, a) => sum + parseFloat(a.amount), 0);
+      const net=Math.round((r.base+r.ot-r.deduct-dayAdv)*100)/100;
+      lines.push([emp.id,emp.name,emp.type,emp.rate,r.date,r.cin,r.cout,r.late,r.base,r.ot,r.deduct,dayAdv > 0 ? dayAdv : '',net,r.adminNote||'',r.note||'']);
+    });
+    const t=calcEmpTotal(emp);
+    lines.push([emp.id,emp.name,'รวม','','','','','',t.base,t.ot,t.deduct,t.advance,t.net,'','']);
+    lines.push([]);
+  });
+  const csv=lines.map(l=>l.map(x=>'"'+(x||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`salary_${CURRENT_MONTH}.csv`; a.click();
+}
+
+document.getElementById('search').addEventListener('input',function(){
+  const q=this.value.toLowerCase();
+  document.querySelectorAll('.emp-card').forEach(card=>{
+    const name=card.querySelector('.emp-name').textContent.toLowerCase();
+    card.style.display=name.includes(q)?'':'none';
+  });
+});
+
+
+
+// Initialize!
+syncNewSettingsAndCalculate();
+
+// ── CSV Upload Feature ──────────────────────────────
+function parseCSV(text) {
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  const lines = text.split(/\r?\n/);
+  if (lines.length < 2) return null;
+  const header = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const idx = {
+    empId: header.findIndex(h => h.includes('หมายเลขพนักงาน') || h === 'No.'),
+    date:  header.findIndex(h => h.includes('วันที่') || h === 'Date'),
+    cin:   header.findIndex(h => h.includes('นาฬิกาเข้า') || h.includes('Clock In')),
+    cout:  header.findIndex(h => h.includes('นาฬิกาออก') || h.includes('Clock Out')),
+    late:  header.findIndex(h => h.includes('Late In(M)')),
+  };
+  if (idx.empId === -1 || idx.date === -1) {
+    alert('ไม่พบคอลัมน์ หมายเลขพนักงาน หรือ วันที่\nHeader: ' + header.join(' | '));
+    return null;
+  }
+  const np = {};
+  for (let i = 1; i < lines.length; i++) {
+    const row = lines[i].trim();
+    if (!row) continue;
+    const cols = row.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+    const eid = cols[idx.empId];
+    if (!eid) continue;
+    const dStr = cols[idx.date];
+    if (!dStr || !dStr.includes('-')) continue;
+    const cin  = idx.cin  !== -1 ? (cols[idx.cin]  || '') : '';
+    const cout = idx.cout !== -1 ? (cols[idx.cout] || '') : '';
+    const lateM = idx.late !== -1 ? (parseFloat(cols[idx.late]) || 0) : 0;
+    if (!np[eid]) np[eid] = [];
+    np[eid].push({ date: dStr, cin, cout, lateM });
+  }
+  return Object.keys(np).length > 0 ? np : null;
+}
+
+function handleCSVUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const tryLoad = (encoding) => {
+    const r = new FileReader();
+    r.onload = (e) => {
+      const p = parseCSV(e.target.result);
+      if (p) {
+        let newMonth = CURRENT_MONTH;
+        for (const eid in p) {
+            if (p[eid].length > 0) {
+                const dateParts = p[eid][0].date.split('-');
+                if (dateParts.length >= 2) newMonth = dateParts[0] + '-' + dateParts[1];
+                break;
+            }
+        }
+        if (newMonth !== CURRENT_MONTH) {
+            CURRENT_MONTH = newMonth;
+            localStorage.setItem('PAYROLL_ACTIVE_MONTH', CURRENT_MONTH);
+            DAYS_IN_MONTH = new Date(parseInt(CURRENT_MONTH.split('-')[0]), parseInt(CURRENT_MONTH.split('-')[1]), 0).getDate();
+        }
+        for (const eid in p) {
+          if (!RAW_PUNCHES[eid]) {
+            RAW_PUNCHES[eid] = p[eid];
+          } else {
+            const existingDays = {};
+            RAW_PUNCHES[eid].forEach(row => existingDays[row.date] = row);
+            p[eid].forEach(row => existingDays[row.date] = row);
+            RAW_PUNCHES[eid] = Object.values(existingDays).sort((a,b) => a.date.localeCompare(b.date));
+          }
+        }
+        saveRawPunches();
+        const n = Object.keys(p).length;
+        syncNewSettingsAndCalculate();
+        showToast('อัปโหลด CSV และรวมข้อมูลสำเร็จ · พบ ' + n + ' คน');
+      } else if (encoding === 'UTF-8') {
+        tryLoad('windows-874');
+      } else {
+        alert('ไม่สามารถอ่านไฟล์ CSV กรุณาตรวจสอบรูปแบบไฟล์');
+      }
+    };
+    r.readAsText(file, encoding);
+  };
+  tryLoad('UTF-8');
+  event.target.value = '';
+}
+
+// ── Backup Feature ────────────────────────────────
+function exportBackup() {
+  const backupData = {
+    month: CURRENT_MONTH,
+    rawPunches: RAW_PUNCHES,
+    edits: EDITS,
+    advances: ADVANCES,
+    errands: ERRANDS,
+    settings: {
+      shift: SHIFT,
+      deptRules: DEPT_RULES,
+      globalRules: GLOBAL_RULES,
+      savedRulesV1: localStorage.getItem('PAYROLL_SAVED_RULES_V1')
+    },
+    exportedAt: new Date().toISOString()
+  };
+  
+  const jsonStr = JSON.stringify(backupData, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const now = new Date();
+  const ts = now.getFullYear() + 
+             String(now.getMonth() + 1).padStart(2, '0') + 
+             String(now.getDate()).padStart(2, '0') + 
+             String(now.getHours()).padStart(2, '0') + 
+             String(now.getMinutes()).padStart(2, '0');
+  a.download = `payroll_backup_${ts}.json`;
+  a.click();
+}
+
+function handleBackupUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = (e) => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed || !parsed.rawPunches || !parsed.settings) {
+        alert("ไฟล์ Backup ไม่ถูกต้อง หรือไม่ใช่ไฟล์ Backup ของระบบนี้");
+        return;
+      }
+      if (!confirm(`คุณต้องการโหลด Backup ของเดือน ${parsed.month || CURRENT_MONTH} ใช่หรือไม่?\nข้อมูลการแก้ไขและตั้งค่าปัจจุบันทั้งหมดในเดือนนี้จะถูกเขียนทับ`)) return;
+
+      if (parsed.month) {
+        CURRENT_MONTH = parsed.month;
+        localStorage.setItem('PAYROLL_ACTIVE_MONTH', CURRENT_MONTH);
+        DAYS_IN_MONTH = new Date(parseInt(CURRENT_MONTH.split('-')[0]), parseInt(CURRENT_MONTH.split('-')[1]), 0).getDate();
+      }
+      
+      if (parsed.settings.savedRulesV1) {
+        localStorage.setItem('PAYROLL_SAVED_RULES_V1', parsed.settings.savedRulesV1);
+      }
+      
+      RAW_PUNCHES = parsed.rawPunches;
+      saveRawPunches();
+      
+      EDITS = parsed.edits || {};
+      saveEdits();
+      
+      ADVANCES = parsed.advances || {};
+      saveAdvances();
+
+      ERRANDS = parsed.errands || {};
+      saveErrands();
+      
+      if (parsed.settings.shift) {
+        SHIFT = parsed.settings.shift;
+        localStorage.setItem('PAYROLL_SHIFT_' + getMonthKey(), JSON.stringify(SHIFT));
+      }
+      if (parsed.settings.deptRules) {
+        DEPT_RULES = parsed.settings.deptRules;
+        localStorage.setItem('PAYROLL_DEPT_RULES_' + getMonthKey(), JSON.stringify(DEPT_RULES));
+      }
+      
+      syncNewSettingsAndCalculate();
+      showToast('นำเข้า Backup สำเร็จ ข้อมูลได้รับการตีพิมพ์บนตารางแล้ว');
+      
+    } catch(err) {
+      alert("ไม่สามารถอ่านไฟล์ JSON ได้ หรือรูปแบบไฟล์เสียหาย");
+      console.error(err);
+    }
+  };
+  r.readAsText(file);
+  event.target.value = '';
+}
+
+</script>
+</body></html>

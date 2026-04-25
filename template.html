@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>💰 ระบบคำนวณเงินเดือน มีนาคม 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f9fa;--surface:#ffffff;--surface2:#ffffff;--border:#e2e8f0;
+  --accent:#22c55e;--accent2:#16a34a;--green:#22c55e;--red:#ef4444;
+  --yellow:#f59e0b;--blue:#3b82f6;--text:#1e293b;--muted:#64748b;
+  --card-shadow:0 1px 3px rgba(0,0,0,0.05);
+}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+/* ── Header ── */
+.header{background:#ffffff;border-bottom:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 2px rgba(0,0,0,0.02)}
+.header h1{font-size:1.4rem;font-weight:700;color:#0f172a}
+.header .subtitle{font-size:.85rem;color:var(--muted);margin-top:2px}
+.grand-total{background:var(--green);padding:10px 20px;border-radius:6px;text-align:right;box-shadow:0 2px 4px rgba(34,197,94,0.15)}
+.grand-total .label{font-size:.75rem;color:rgba(255,255,255,.9)}
+.grand-total .amount{font-size:1.5rem;font-weight:700;color:#fff}
+/* ── Toolbar ── */
+.toolbar{padding:16px 32px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--border);background:#ffffff}
+.search-box{flex:1;min-width:200px;background:#f8f9fa;border:1px solid var(--border);border-radius:6px;padding:8px 14px;color:var(--text);font-family:inherit;font-size:.9rem}
+.search-box:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 2px rgba(34,197,94,0.2)}
+.btn{padding:8px 16px;border-radius:6px;border:1px solid transparent;cursor:pointer;font-family:inherit;font-size:.85rem;font-weight:500;transition:.2s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2)}
+.btn-success{background:var(--green);color:#fff}
+.btn-success:hover{background:#16a34a}
+.btn-outline{background:#fff;border-color:var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+/* ── Summary bar ── */
+.summary-bar{display:flex;gap:12px;padding:16px 32px;overflow-x:auto;background:#ffffff;border-bottom:1px solid var(--border)}
+.summary-card{background:#ffffff;border:1px solid var(--border);border-radius:6px;padding:12px 18px;min-width:150px;flex-shrink:0;box-shadow:var(--card-shadow)}
+.summary-card .s-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.summary-card .s-value{font-size:1.1rem;font-weight:700;margin-top:4px}
+.s-green{color:var(--green)}.s-red{color:var(--red)}.s-blue{color:var(--blue)}.s-purple{color:#8b5cf6}
+/* ── Main ── */
+.main{padding:24px 32px;display:flex;flex-direction:column;gap:16px;padding-bottom:100px}
+/* ── Employee Card ── */
+.emp-card{background:#ffffff;border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:.2s;box-shadow:var(--card-shadow)}
+.emp-card:hover{border-color:var(--accent);box-shadow:0 4px 12px rgba(0,0,0,0.05)}
+.emp-header{padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;user-select:none}
+.emp-header:hover{background:#f8f9fa}
+.emp-avatar{width:42px;height:42px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;flex-shrink:0}
+.emp-info{flex:1}
+.emp-name{font-size:1rem;font-weight:600;color:#0f172a}
+.emp-meta{font-size:.8rem;color:var(--muted);margin-top:2px}
+.emp-chips{display:flex;gap:8px;flex-wrap:wrap;flex:2}
+.chip{padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:500;border:1px solid transparent}
+.chip-base{background:#f0f9ff;color:var(--blue);border-color:#e0f2fe}
+.chip-ot{background:#f0fdf4;color:var(--green);border-color:#dcfce7}
+.chip-deduct{background:#fef2f2;color:var(--red);border-color:#fee2e2}
+.chip-total{background:#f5f3ff;color:#8b5cf6;border-color:#ede9fe;font-weight:700}
+.emp-toggle{color:var(--muted);transition:.3s;font-size:1.2rem}
+.emp-body{display:none;border-top:1px solid var(--border)}
+.emp-body.open{display:block}
+/* ── Table ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+thead th{background:#f8f9fa;padding:10px 14px;text-align:right;color:var(--muted);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;border-bottom:1px solid var(--border)}
+thead th:first-child,thead th:nth-child(2),thead th:nth-child(3),thead th:nth-child(4){text-align:left}
+tbody tr{border-bottom:1px solid var(--border);transition:.15s}
+tbody tr:hover{background:#f8f9fa}
+td{padding:9px 14px;white-space:nowrap;text-align:right;color:#0f172a}
+td:first-child,td:nth-child(2),td:nth-child(3),td:nth-child(4){text-align:left}
+.td-date{color:var(--muted);font-size:.82rem}
+.td-time{color:#0f172a}
+.td-late{color:var(--yellow)}
+/* Editable cells */
+.editable{cursor:text;border-radius:4px;padding:4px 8px;min-width:72px;display:inline-block;border:1px solid transparent;transition:.2s;font-family:inherit;font-size:.85rem}
+.editable:hover{border-color:var(--border);background:#f8f9fa}
+.editable:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 2px rgba(34,197,94,0.2)}
+.editable.modified{background:#f0fdf4;border-color:var(--green);color:var(--green)}
+.td-ot .editable{color:var(--green)}
+.td-deduct .editable{color:var(--red)}
+.td-net{font-weight:600;color:#8b5cf6}
+.note-cell{color:var(--muted);font-size:.78rem;max-width:200px;text-overflow:ellipsis}
+.ot-check{accent-color:var(--green);width:14px;height:14px;cursor:pointer;vertical-align:middle;margin-right:4px}
+.ot-label{display:inline-flex;align-items:center;cursor:pointer;user-select:none;color:#0f172a}
+/* Footer row */
+.tfoot-row td{background:#f8f9fa;font-weight:700;border-top:2px solid var(--border);color:#0f172a}
+.tfoot-row .total-net{color:#8b5cf6;font-size:1rem}
+/* Reset btn */
+.reset-btn{font-size:.72rem;padding:2px 8px;border-radius:4px;background:#fff;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:inherit;margin-left:8px}
+.reset-btn:hover{border-color:var(--red);color:var(--red)}
+/* Settings Sidebar */
+.sidebar-overlay {position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);display:none;justify-content:flex-end;z-index:1000;backdrop-filter:blur(2px)}
+.sidebar-overlay.show {display:flex}
+.sidebar-content {background:#fff;width:90%;max-width:780px;height:100vh;display:flex;flex-direction:column;box-shadow:-5px 0 25px rgba(0,0,0,0.1);animation:slideLeft 0.3s ease}
+.sidebar-content .modal-footer {border-radius:0}
+@keyframes slideLeft { 0% {transform:translateX(100%)} 100% {transform:translateX(0)} }
+/* General Modal */
+.modal-overlay {position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(2px)}
+.modal-overlay.show {display:flex}
+.modal-content {background:#fff;border-radius:8px;width:90%;max-width:800px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 10px 25px rgba(0,0,0,0.1)}
+.modal-header {padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.modal-header h2 {font-size:1.2rem;color:#0f172a}
+.modal-close {cursor:pointer;font-size:1.5rem;color:var(--muted);background:none;border:none}
+.modal-body {padding:20px 24px;overflow-y:auto;flex:1}
+.modal-footer {padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:12px;background:#f8f9fa;border-radius:0 0 8px 8px}
+.settings-table {width:100%;border-collapse:collapse}
+.settings-table th, .settings-table td {padding:10px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.settings-table th {background:#f8f9fa;font-weight:600;color:var(--muted);font-size:.8rem;text-transform:uppercase}
+.setup-input {padding:6px 10px;border:1px solid var(--border);border-radius:4px;width:100%;font-family:inherit;font-size:.9rem}
+.setup-input:focus {outline:none;border-color:var(--accent)}
+
+/* Calendar Grid */
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 10px; }
+.cal-day { border: 1px solid var(--border); border-radius: 6px; padding: 12px 0; text-align: center; cursor: pointer; user-select: none; transition: 0.2s; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.cal-day:hover { border-color: var(--blue); }
+.cal-day.active { background: #eff6ff; border-color: var(--blue); color: var(--blue); }
+.cal-day.active .cal-num { font-weight: 700; }
+.cal-num { font-size: 1.1rem; }
+.cal-label { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+.cal-day.active .cal-label { color: var(--blue); }
+
+/* Toast */
+#toast{position:fixed;bottom:24px;right:24px;background:#22c55e;color:#fff;padding:12px 20px;border-radius:6px;font-size:.9rem;font-weight:500;transform:translateY(80px);opacity:0;transition:.3s;z-index:999;box-shadow:0 4px 12px rgba(34,197,94,0.2)}
+#toast.show{transform:translateY(0);opacity:1}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <h1>💰 ระบบคำนวณเงินเดือน</h1>
+    <div class="subtitle" id="header-subtitle">มีนาคม 2026 · แก้ไขได้</div>
+  </div>
+  <div class="grand-total">
+    <div class="label">รวมเงินเดือนทั้งหมด</div>
+    <div class="amount" id="grand-total">฿0</div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <input class="search-box" id="search" type="text" placeholder="🔍 ค้นหาชื่อพนักงาน...">
+  <button class="btn btn-outline" onclick="expandAll()">ขยายทั้งหมด</button>
+  <button class="btn btn-outline" onclick="collapseAll()">ย่อทั้งหมด</button>
+  <button class="btn btn-outline" onclick="resetAll()">🔄 Reset ทั้งหมด</button>
+  <button class="btn btn-outline" onclick="openSettings()" style="border-color:var(--blue);color:var(--blue)">⚙️ ตั้งค่าเงินเดือน</button>
+  <button class="btn btn-success" onclick="exportCSV()">📥 Export CSV</button>
+  <button class="btn btn-primary" onclick="window.print()">🖨️ Print</button>
+</div>
+
+<div class="summary-bar" id="summary-bar"></div>
+<div class="main" id="main"></div>
+<!-- Calendar Modal -->
+<div class="modal-overlay" id="calendar-modal" onclick="if(event.target===this)closeCalendarModal()">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h2>🗓️ จัดการวันหยุดพักผ่อน (<span id="cal-emp-name"></span>)</h2>
+      <button class="modal-close" onclick="closeCalendarModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem; color:var(--muted); margin-bottom: 12px;">คลิกเลือกวันที่เป็นวันหยุดพักผ่อนสำหรับเดือนนี้ (พนักงานจะได้ค่าแรงเต็มจำนวนในวันที่เลือก)</p>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeCalendarModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveCalendarModal()">บันทึกวันหยุด</button>
+    </div>
+  </div>
+</div>
+
+<!-- Advance Modal -->
+<div class="modal-overlay" id="advance-modal" onclick="if(event.target===this)closeAdvanceModal()">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h2>💸 บันทึกเบิกเงิน (<span id="adv-emp-name"></span>)</h2>
+      <button class="modal-close" onclick="closeAdvanceModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem; color:var(--muted); margin-bottom: 8px;">
+        ยอดเงินสุทธิที่เบิกได้ตอนนี้: <strong style="color:var(--green);font-size:1.1rem" id="adv-max-amount">฿0</strong>
+      </p>
+      <div style="display:flex; gap:8px; margin-bottom:16px; align-items:flex-end">
+        <div style="flex:1">
+          <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">วันที่เบิก</label>
+          <input type="date" id="adv-date" class="setup-input" value="2026-03-01">
+        </div>
+        <div style="flex:1">
+          <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">จำนวนเงิน (บาท)</label>
+          <input type="number" id="adv-amount" class="setup-input" placeholder="0">
+        </div>
+        <div style="flex:2">
+          <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">หัวข้อ / หมายเหตุ</label>
+          <input type="text" id="adv-note" class="setup-input" placeholder="เช่น เบิกค่ารถ...">
+        </div>
+        <button class="btn btn-primary" onclick="addAdvance()">➕ เพิ่ม</button>
+      </div>
+      
+      <table class="settings-table">
+        <thead>
+          <tr>
+            <th style="width:100px">วันที่เบิก</th>
+            <th>หมายเหตุ</th>
+            <th style="width:100px">จำนวนเงิน</th>
+            <th style="width:60px;text-align:center">ลบ</th>
+          </tr>
+        </thead>
+        <tbody id="adv-list-tbody">
+          <!-- Advance rows will go here -->
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAdvanceModal()">เสร็จสิ้น / ปิดหน้าต่าง</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Settings Sidebar -->
+<div class="sidebar-overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
+  <div class="sidebar-content">
+    <div class="modal-header">
+      <div style="display:flex; gap:16px; align-items:flex-end">
+        <h2 id="tab-emp" style="cursor:pointer; margin:0; line-height:1" onclick="switchTab('emp')">⚙️ พนักงาน</h2>
+        <h2 id="tab-dept" style="cursor:pointer; color:var(--muted); font-size:1.1rem; margin:0; line-height:1; padding-bottom:1px" onclick="switchTab('dept')">🏢 กฎ OT ตามแผนก</h2>
+      </div>
+      <button class="modal-close" onclick="closeSettings()">&times;</button>
+    </div>
+    <div class="modal-body" id="modal-body-emp">
+      <table class="settings-table">
+        <thead>
+          <tr>
+            <th style="width:50px">รหัส</th>
+            <th style="width:150px">ชื่อ</th>
+            <th style="width:120px">ประเภท</th>
+            <th>เรทเงิน (บาท)</th>
+            <th style="width:90px">เรท OT/ชม.</th>
+            <th style="width:100px">กะ / OT</th>
+          </tr>
+        </thead>
+        <tbody id="settings-tbody"></tbody>
+      </table>
+    </div>
+    <div class="modal-body" id="modal-body-dept" style="display:none">
+       <table class="settings-table">
+          <thead>
+            <tr>
+              <th>กลุ่ม OT</th>
+              <th style="width:130px">เงื่อนไข</th>
+              <th style="width:100px">เวลาเริ่ม</th>
+              <th style="width:100px">สูงสุด(Cutoff)</th>
+              <th style="width:100px">เรท (บ./ชม.)</th>
+              <th style="width:80px;text-align:center">อนุมัติ?</th>
+            </tr>
+          </thead>
+          <tbody id="settings-dept-tbody"></tbody>
+       </table>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeSettings()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveSettings()">บันทึกและคำนวณใหม่</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// INJECT_DATA_HERE
+
+let storedShift = localStorage.getItem('PAYROLL_SHIFT_202603');
+if (storedShift) {
+  try { setTimeout(()=>{ SHIFT = JSON.parse(storedShift); calculateAllData(); }, 1); } catch(e){}
+}
+let storedDeptRules = localStorage.getItem('PAYROLL_DEPT_RULES_202603');
+if (storedDeptRules) {
+  try { setTimeout(()=>{ DEPT_RULES = JSON.parse(storedDeptRules); calculateAllData(); }, 1); } catch(e){}
+}
+let storedEdits = localStorage.getItem('PAYROLL_EDITS_202603');
+let EDITS = storedEdits ? JSON.parse(storedEdits) : {};
+function saveEdits() { localStorage.setItem('PAYROLL_EDITS_202603', JSON.stringify(EDITS)); }
+
+let storedAdvances = localStorage.getItem('PAYROLL_ADVANCE_202603');
+let ADVANCES = storedAdvances ? JSON.parse(storedAdvances) : {};
+function saveAdvances() { localStorage.setItem('PAYROLL_ADVANCE_202603', JSON.stringify(ADVANCES)); }
+
+const DAYS_IN_MONTH = 31;
+const OT_RATE = 40;
+let data = []; // The calculated results
+
+// -- Core Logic (ported from Node backend) --
+function parseH(s) {
+  if (!s || s.trim() === '' || s.trim() === '-') return null;
+  try { const p = s.trim().replace('.', ':').split(':'); return parseInt(p[0]) + parseInt(p[1]) / 60; } catch(e) { return null; }
+}
+function roundHalf(r) {
+  if (r <= 0) return 0;
+  const lower = Math.floor(r * 2) / 2, upper = lower + 0.5;
+  return (Math.round((upper - r) * 60 * 1e4) / 1e4) <= 10 ? upper : lower;
+}
+function isSunday(d) { try { return new Date(d.trim()).getDay() === 0; } catch(e) { return false; } }
+function kitchenLate(m, rate, hrs=12) {
+  if (m <= 30) return 0;
+  return Math.round(Math.ceil((m-15)/30)*0.5*(rate/hrs)*100)/100;
+}
+function getShift(eid, cinH) {
+  let sr = Object.assign({}, SHIFT[eid]);
+  if (eid==='8' && cinH!==null && cinH>=12) { sr.ss=15; sr.dout=2; sr.ot=null; }
+  
+  if (cinH !== null) {
+      let closestShift = 10;
+      if (Math.abs(cinH - 15) < Math.abs(cinH - closestShift)) closestShift = 15;
+      if (Math.abs(cinH - 17) < Math.abs(cinH - closestShift)) closestShift = 17;
+      
+      sr.detectedShift = closestShift;
+      
+      const origOt = SHIFT[eid].ot;
+      if (!['kitchen', 'football', 'looknum'].includes(origOt)) {
+          if (closestShift === 10) {
+              if (!sr.ot) sr.ot = 'morning';
+          } else {
+              if (sr.ot === 'morning' || sr.ot === 'morning_pt') sr.ot = null;
+          }
+      }
+  }
+  
+  return sr;
+}
+function calcOt(eid, cinH, coutH, sr) {
+  const ot = sr.ot; if (!ot||cinH===null||coutH===null) return 0;
+  const rule = DEPT_RULES[ot];
+  if (!rule) return 0;
+  
+  if (rule.type === 'after') {
+    let cout = coutH;
+    if (cout < cinH) cout += 24;
+    // cutoff check (e.g. 21.1666 for 21:10)
+    if (rule.cutoff && cout <= rule.cutoff) return 0;
+    return cout <= rule.time ? 0 : roundHalf(cout - rule.time);
+  } else if (rule.type === 'before') {
+    if (rule.cutoff && cinH >= rule.cutoff) return 0; 
+    return cinH < rule.time ? roundHalf(rule.time - cinH) : 0;
+  }
+  return 0;
+}
+function calcLate(lm, sr, cinH) {
+  if (sr.ot==='kitchen') return kitchenLate(lm, sr.d, sr.hrs);
+  if (sr.lt==='football') {
+    if (cinH===null||cinH<=14+10/60) return 0;
+    let p=1, b=15;
+    while(b<=20){ if(cinH>b){p++;b++;} else break; }
+    return p*(sr.otRate || 40);
+  }
+  if (sr.t==='รายเดือน') {
+    if (lm<=10) return 0;
+    const rph = (sr.mo/DAYS_IN_MONTH)/sr.hrs;
+    return Math.round((roundHalf(lm/60)||0.5)*rph*100)/100;
+  } else {
+    if (lm<=10) return 0;
+    return Math.round((roundHalf(lm/60)||0.5)*(sr.otRate || 40)*100)/100;
+  }
+}
+
+function calculateAllData() {
+  const allData = [];
+  for (const eid of Object.keys(RAW_PUNCHES).sort((a,b)=>+a-+b)) {
+    const srBase = SHIFT[eid];
+    if (!srBase) continue; // safety check
+    const empRows = [];
+    const rawRows = RAW_PUNCHES[eid] || [];
+    const daysMap = {};
+    rawRows.forEach(r => {
+      if (!daysMap[r.date]) daysMap[r.date] = r;
+    });
+    
+    for (let day = 1; day <= DAYS_IN_MONTH; day++) {
+      const dateStr = `2026-03-${day.toString().padStart(2, '0')}`;
+      const d = daysMap[dateStr] || { date: dateStr, cin: '', cout: '', lateM: 0 };
+      
+      let lateM = parseFloat(d.lateM) || 0;
+      let checkin = d.cin;
+      let checkout = d.cout;
+      
+      const k = eid+'_'+dateStr;
+      if (EDITS[k]) {
+        if(EDITS[k].cin!==undefined) checkin=EDITS[k].cin;
+        if(EDITS[k].cout!==undefined) checkout=EDITS[k].cout;
+      }
+      
+      const cinH = parseH(checkin), coutH = parseH(checkout);
+      
+      const sr = getShift(eid, cinH);
+      let dayRate = srBase.t==='รายเดือน' ? Math.round(srBase.mo/DAYS_IN_MONTH*100)/100 : srBase.d;
+      let note = '';
+
+      if (eid==='21' && isSunday(dateStr)) {
+        empRows.push({date:dateStr,cin:checkin,cout:checkout,late:0,base:190,ot:0,deduct:0,note:'วันอาทิตย์',locked:true,possibleOt:0,manualOt:false});
+        continue;
+      }
+      if (eid==='21' && coutH!==null && coutH<17) {
+        const h = coutH-(cinH!==null?cinH:8);
+        const pay = Math.round(Math.max(0,h)*(380/9)*100)/100;
+        empRows.push({date:dateStr,cin:checkin,cout:checkout,late:0,base:pay,ot:0,deduct:0,note:'ออกก่อน 17:00',locked:true,possibleOt:0,manualOt:false});
+        continue;
+      }
+      
+      // Auto Shift & Late Detection 
+      if (cinH !== null && sr.detectedShift) {
+          let calculatedLate = (cinH - sr.detectedShift) * 60;
+          lateM = calculatedLate > 0 ? calculatedLate : 0;
+          
+          if (srBase.ss && sr.detectedShift !== srBase.ss) {
+              note = (note ? note + ' ' : '') + `(สลับกะ ${sr.detectedShift}.00)`;
+          }
+      }
+      
+      let expectedBase = dayRate;
+      let deduct = 0;
+      let otH = 0;
+      
+      let isOffDay = false;
+      if (EDITS[k] && EDITS[k].isOffDay) {
+          isOffDay = true;
+      }
+
+      const dNow = new Date();
+      const localTodayStr = dNow.getFullYear() + '-' + String(dNow.getMonth()+1).padStart(2, '0') + '-' + String(dNow.getDate()).padStart(2, '0');
+
+      if (cinH === null && coutH === null) {
+          if (srBase.t === 'รายเดือน') {
+              if (isOffDay) {
+                  if (dateStr > localTodayStr) {
+                      dayRate = 0;
+                      expectedBase = 0;
+                      note = (note ? note + ' ' : '') + 'วันหยุดพักผ่อน (ล่วงหน้า)';
+                  } else {
+                      note = (note ? note + ' ' : '') + 'วันหยุดพักผ่อน';
+                  }
+              } else {
+                  dayRate = 0;
+                  expectedBase = 0;
+                  note = (note ? note + ' ' : '') + 'ขาดงาน';
+              }
+          } else {
+              dayRate = 0;
+              expectedBase = 0;
+          }
+      } else {
+          if (cinH === null) {
+              dayRate = 0;
+              note = (note ? note + ' ' : '') + 'รอใส่เวลาเข้า';
+          } else if (coutH === null) {
+              dayRate = 0;
+              note = (note ? note + ' ' : '') + 'รอใส่เวลาออก';
+          }
+          deduct = calcLate(lateM, sr, cinH);
+          otH = calcOt(eid, cinH, coutH, sr);
+      }
+      const rule = DEPT_RULES[sr.ot] || {};
+      const empOtRate = sr.otRate || rule.rate || 40;
+      const otMoney = Math.round(otH*empOtRate*100)/100;
+      let actualOtMoney = otMoney;
+      let manualOt = !!rule.reqApprove;
+      
+      const r = {
+        date:dateStr,cin:checkin,cout:checkout,late:Math.round(lateM),
+        base:dayRate, expectedBase:expectedBase, ot:actualOtMoney, deduct,
+        note, adminNote: '', locked:false,possibleOt:otMoney,manualOt,srOt:sr.ot,srDout:sr.dout,
+        origBase: dayRate, origOt: actualOtMoney, origDeduct: deduct, origCin: d.cin, origCout: d.cout
+      };
+      
+      if (EDITS[k]) {
+        if(EDITS[k].base!==undefined) r.base=EDITS[k].base;
+        if(EDITS[k].ot!==undefined) r.ot=EDITS[k].ot;
+        if(EDITS[k].deduct!==undefined) r.deduct=EDITS[k].deduct;
+        if(EDITS[k].adminNote!==undefined) r.adminNote=EDITS[k].adminNote;
+      }
+      
+      empRows.push(r);
+    }
+    
+    allData.push({
+      id: eid,
+      name: EMP_NAMES[eid]||'?',
+      type: srBase.t,
+      rate: srBase.t==='รายเดือน' ? `${srBase.mo.toLocaleString()} บ./เดือน` : `${srBase.d} บ./วัน`,
+      rows: empRows
+    });
+  }
+  data = allData; // Replace global data
+  renderAll();
+}
+
+function fmt(n){return Number(n).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function calcEmpTotal(emp){
+  let tBase=0,tOt=0,tDeduct=0;
+  emp.rows.forEach(r=>{tBase+=r.base; tOt+=r.ot; tDeduct+=r.deduct;});
+  let tAdvance = (ADVANCES[emp.id] || []).reduce((sum, a) => sum + (parseFloat(a.amount) || 0), 0);
+  return {base:tBase,ot:tOt,deduct:tDeduct,advance:tAdvance,net:tBase+tOt-tDeduct-tAdvance};
+}
+function buildChips(emp){
+  const t=calcEmpTotal(emp);
+  let html = `<div class="chip chip-base">ฐาน ${fmt(t.base)}</div>
+    <div class="chip chip-ot">OT ${fmt(t.ot)}</div>
+    <div class="chip chip-deduct">หักสาย ${fmt(t.deduct)}</div>
+    ${t.advance > 0 ? `<div class="chip" style="background:#fefce8;color:var(--yellow);border-color:#fef08a;">เบิก ${fmt(t.advance)}</div>` : ''}
+    <div class="chip chip-total" style="margin-right:8px;">รับสุทธิ ${fmt(t.net)}</div>`;
+    
+  if (emp.type === 'รายเดือน') {
+      html += `<button class="btn btn-outline" style="font-size: 0.75rem; padding: 2px 10px; border-color:var(--blue); color:var(--blue);" onclick="openCalendarModal(event, '${emp.id}')">🗓️ จัดการวันหยุดพักผ่อน</button>`;
+  }
+  html += `<button class="btn btn-outline" style="font-size: 0.75rem; padding: 2px 10px; margin-left:8px; border-color:var(--yellow); color:var(--yellow);" onclick="openAdvanceModal(event, '${emp.id}')">💸 เบิกเงิน</button>`;
+  return html;
+}
+function buildTfoot(emp){
+  const t=calcEmpTotal(emp);
+  let deductHtml = fmt(t.deduct);
+  if (t.advance > 0) {
+      deductHtml += `<br><span style="font-size:0.75rem;color:var(--yellow);font-weight:normal;">(เบิก: ${fmt(t.advance)})</span>`;
+  }
+  return `<tr class="tfoot-row"><td colspan="4" style="text-align:right">รวมสุทธิ</td>
+    <td class="td-base">${fmt(t.base)}</td><td class="td-ot">${fmt(t.ot)}</td>
+    <td class="td-deduct">${deductHtml}</td><td class="total-net">${fmt(t.net)}</td><td></td></tr>`;
+}
+function buildRow(emp,r,ri){
+  const net=Math.round((r.base+r.ot-r.deduct)*100)/100;
+  const isModified=(r.base!==r.origBase||r.ot!==r.origOt||r.deduct!==r.origDeduct||r.cout!==r.origCout||r.cin!==r.origCin);
+  const locked=r.locked;
+  function editCell(field,cls){
+    const val=r[field];
+    if(locked) return `<span style="color:var(--muted)">${fmt(val)}</span>`;
+    const mod=(val!==r['orig'+field.charAt(0).toUpperCase()+field.slice(1)])?'modified':'';
+    return `<span class="editable ${mod}" contenteditable="true"
+      onfocus="if(this.textContent==='0.00'||this.textContent==='0')this.textContent=''"
+      onblur="cellEdit('${emp.id}',${ri},'${field}',this)"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+      data-orig="${r['orig'+field.charAt(0).toUpperCase()+field.slice(1)]}"
+    >${fmt(val)}</span>`;
+  }
+  function editTimeCell(field){
+    const val=r[field];
+    if(locked) return `<span style="color:var(--muted)">${val||'-'}</span>`;
+    const mod=(val!==r['orig'+field.charAt(0).toUpperCase()+field.slice(1)])?'modified':'';
+    return `<span class="editable ${mod}" contenteditable="true"
+      onfocus="if(this.textContent==='-')this.textContent=''"
+      onblur="timeEdit('${emp.id}',${ri},'${field}',this)"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+      data-orig="${r['orig'+field.charAt(0).toUpperCase()+field.slice(1)]}"
+    >${val||'-'}</span>`;
+  }
+  let checkboxHtml = '';
+  if (r.manualOt && r.possibleOt > 0 && !locked) {
+    const isChecked = r.ot > 0 ? 'checked' : '';
+    checkboxHtml += `<label class="ot-label" style="font-size:0.75rem;margin-left:6px;padding:2px 6px;border-radius:4px;background:#f0fdf4;border:1px solid #dcfce7;color:#16a34a;display:inline-block"><input type="checkbox" class="ot-check" ${isChecked} onchange="toggleManualOt('${emp.id}',${ri},this,${r.possibleOt})"> คิด OT (${r.possibleOt}บ.)</label>`;
+  }
+  
+  function editNoteCell() {
+    return `<div class="editable" contenteditable="true" 
+      style="min-height:20px; outline:none; font-size:0.85rem; color:var(--blue); border-bottom:1px dashed #cbd5e1; display:inline-block; min-width:100px; text-align:left;"
+      onblur="noteEdit('${emp.id}',${ri},this)"
+      placeholder="พิมพ์โน้ต.."
+    >${r.adminNote || ''}</div>`;
+  }
+  
+  return `<tr id="row-${emp.id}-${ri}">
+    <td class="td-date">${r.date}</td>
+    <td class="td-time" style="color:var(--blue)">${editTimeCell('cin')}</td>
+    <td class="td-time" style="color:var(--blue)">${editTimeCell('cout')}</td>
+    <td class="td-late">${r.late>10?r.late:''}</td>
+    <td class="td-base">${editCell('base','td-base')}</td>
+    <td class="td-ot">${editCell('ot','td-ot')}</td>
+    <td class="td-deduct">${editCell('deduct','td-deduct')}</td>
+    <td class="td-net">${fmt(net)}</td>
+    <td class="note-cell">
+      <div style="font-size:0.8rem; color:var(--muted); margin-bottom:4px;">${r.note||''} ${checkboxHtml}</div>
+      ${editNoteCell()}
+      ${isModified&&!locked?' <button class="reset-btn" onclick="resetRow(event,\''+emp.id+'\','+ri+')" style="margin-left:8px">↩ Reset</button>':''}
+    </td>
+  </tr>`;
+}
+function buildSummary(){
+  let gt=0, sumH='';
+  data.forEach(emp=>{
+    const t=calcEmpTotal(emp); gt+=t.net;
+    sumH+=`<div class="summary-card">
+      <div class="s-label">${emp.name} ${emp.id==='1'?'(JET)':''}</div>
+      <div class="s-value s-green">฿${fmt(t.net)}</div>
+    </div>`;
+  });
+  document.getElementById('summary-bar').innerHTML=sumH;
+  document.getElementById('grand-total').textContent='฿'+fmt(gt);
+  document.getElementById('header-subtitle').textContent = `มีนาคม 2026 · พนักงาน ${data.length} คน · แก้ไขได้`;
+}
+function updateGrand(){
+  let gt=0; data.forEach(emp=>gt+=calcEmpTotal(emp).net);
+  document.getElementById('grand-total').textContent='฿'+fmt(gt);
+}
+function renderAll(){
+  const m=document.getElementById('main');
+  m.innerHTML='';
+  data.forEach(emp=>{
+    const card=document.createElement('div');
+    card.className='emp-card';
+    card.innerHTML=`<div class="emp-header" onclick="toggle('${emp.id}')">
+      <div class="emp-avatar">${EMP_NAMES[emp.id]?EMP_NAMES[emp.id].substring(0,2).toUpperCase():emp.id}</div>
+      <div class="emp-info">
+        <div class="emp-name">#${emp.id} ${emp.name}</div>
+        <div class="emp-meta">${emp.rate} · ${emp.rows.length} วัน</div>
+      </div>
+      <div class="emp-chips" id="chips-${emp.id}">${buildChips(emp)}</div>
+      <div class="emp-toggle" id="toggle-${emp.id}">▼</div>
+    </div>
+    <div class="emp-body" id="body-${emp.id}">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>วันที่</th><th>เข้า</th><th>ออก</th><th>สาย(น.)</th><th>ฐาน</th><th>OT</th><th>หัก</th><th>รวม</th><th style="min-width:200px">หมายเหตุระบบ / แอดมิน</th></tr></thead>
+          <tbody id="tbody-${emp.id}">
+            ${emp.rows.map((r,i)=>buildRow(emp,r,i)).join('')}
+          </tbody>
+          <tfoot id="tfoot-${emp.id}">${buildTfoot(emp)}</tfoot>
+        </table>
+      </div>
+    </div>`;
+    m.appendChild(card);
+  });
+  buildSummary();
+}
+
+function toggle(eid){
+  const body=document.getElementById('body-'+eid);
+  const tog=document.getElementById('toggle-'+eid);
+  body.classList.toggle('open');
+  tog.style.transform=body.classList.contains('open')?'rotate(180deg)':'';
+}
+function expandAll(){document.querySelectorAll('.emp-body').forEach(b=>b.classList.add('open'));document.querySelectorAll('.emp-toggle').forEach(t=>t.style.transform='rotate(180deg)');}
+function collapseAll(){document.querySelectorAll('.emp-body').forEach(b=>b.classList.remove('open'));document.querySelectorAll('.emp-toggle').forEach(t=>t.style.transform='');}
+
+function toggleManualOt(eid, ri, el, possibleOt) {
+  const row = document.getElementById('row-'+eid+'-'+ri);
+  const otCell = row.querySelector('.td-ot .editable');
+  otCell.textContent = fmt(el.checked ? possibleOt : 0);
+  cellEdit(eid, ri, 'ot', otCell);
+}
+
+let currentCalEid = null;
+let currentCalDays = {}; 
+
+function openCalendarModal(e, eid) {
+  e.stopPropagation();
+  const emp = data.find(x => x.id === eid);
+  if (!emp) return;
+  currentCalEid = eid;
+  currentCalDays = {};
+  
+  document.getElementById('cal-emp-name').textContent = emp.name;
+  
+  for (let day = 1; day <= DAYS_IN_MONTH; day++) {
+    const dateStr = `2026-03-${day.toString().padStart(2, '0')}`;
+    const key = eid + '_' + dateStr;
+    if (EDITS[key] && EDITS[key].isOffDay) {
+        currentCalDays[dateStr] = true;
+    }
+  }
+  
+  renderCalendarGrid();
+  document.getElementById('calendar-modal').classList.add('show');
+}
+
+function renderCalendarGrid() {
+    let html = '';
+    const dayNames = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+    for (let day = 1; day <= DAYS_IN_MONTH; day++) {
+        const dateStr = `2026-03-${day.toString().padStart(2, '0')}`;
+        const activeClass = currentCalDays[dateStr] ? 'active' : '';
+        const d = new Date(dateStr);
+        const dayLabel = dayNames[d.getDay()];
+        html += `<div class="cal-day ${activeClass}" onclick="toggleCalDay('${dateStr}')">
+            <div class="cal-num">${day}</div>
+            <div class="cal-label">${dayLabel}</div>
+        </div>`;
+    }
+    document.getElementById('calendar-grid').innerHTML = html;
+}
+
+function toggleCalDay(dateStr) {
+    currentCalDays[dateStr] = !currentCalDays[dateStr];
+    renderCalendarGrid();
+}
+
+function closeCalendarModal() {
+    document.getElementById('calendar-modal').classList.remove('show');
+}
+
+function saveCalendarModal() {
+    if (!currentCalEid) return;
+    for (let day = 1; day <= DAYS_IN_MONTH; day++) {
+        const dateStr = `2026-03-${day.toString().padStart(2, '0')}`;
+        const key = currentCalEid + '_' + dateStr;
+        if (currentCalDays[dateStr]) {
+            if (!EDITS[key]) EDITS[key] = {};
+            EDITS[key].isOffDay = true;
+        } else {
+            if (EDITS[key] && EDITS[key].isOffDay) {
+                EDITS[key].isOffDay = false;
+            }
+        }
+    }
+    saveEdits();
+    
+    // Remember which accordions are open so we don't collapse them all on refresh
+    const openModals = Array.from(document.querySelectorAll('.emp-body.open')).map(el => el.id.replace('body-', ''));
+    
+    calculateAllData();
+    closeCalendarModal();
+    showToast('บันทึกวันหยุดปฏิทินสำเร็จ');
+    
+    // Restore open accordions
+    openModals.forEach(id => {
+        const body = document.getElementById('body-'+id);
+        const tog = document.getElementById('toggle-'+id);
+        if (body && tog) {
+            body.classList.add('open');
+            tog.style.transform = 'rotate(180deg)';
+        }
+    });
+}
+let currentAdvEid = null;
+
+function openAdvanceModal(e, eid) {
+  e.stopPropagation();
+  const emp = data.find(x => x.id === eid);
+  if (!emp) return;
+  currentAdvEid = eid;
+  
+  document.getElementById('adv-emp-name').textContent = emp.name;
+  document.getElementById('adv-date').value = '2026-03-01';
+  document.getElementById('adv-amount').value = '';
+  document.getElementById('adv-note').value = '';
+  
+  renderAdvanceList();
+  document.getElementById('advance-modal').classList.add('show');
+}
+
+function closeAdvanceModal() {
+  document.getElementById('advance-modal').classList.remove('show');
+}
+
+function renderAdvanceList() {
+  if (!currentAdvEid) return;
+  
+  const emp = data.find(x => x.id === currentAdvEid);
+  if (!emp) return;
+  
+  const t = calcEmpTotal(emp);
+  // Re-add the current advance total to find the maximum possible they could have drawn
+  const maxAllowed = t.net + t.advance; 
+  document.getElementById('adv-max-amount').textContent = '฿' + fmt(Math.max(0, maxAllowed - t.advance));
+  
+  const advances = ADVANCES[currentAdvEid] || [];
+  let html = '';
+  advances.forEach((adv, idx) => {
+    html += `<tr>
+      <td>${adv.date}</td>
+      <td style="color:var(--muted);font-size:0.8rem">${adv.note}</td>
+      <td style="text-align:right;color:var(--yellow);font-weight:600">฿${fmt(adv.amount)}</td>
+      <td style="text-align:center">
+        <button class="btn btn-outline" style="padding:2px 6px;color:var(--red);border-color:var(--red);" onclick="deleteAdvance(${idx})">x</button>
+      </td>
+    </tr>`;
+  });
+  
+  if (advances.length === 0) {
+    html = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">ไม่มีประวัติการเบิกเงิน</td></tr>`;
+  }
+  
+  document.getElementById('adv-list-tbody').innerHTML = html;
+}
+
+function addAdvance() {
+  if (!currentAdvEid) return;
+  const dateObj = document.getElementById('adv-date').value;
+  const amountObj = document.getElementById('adv-amount').value;
+  const noteObj = document.getElementById('adv-note').value;
+  
+  const amount = parseFloat(amountObj);
+  if (isNaN(amount) || amount <= 0) {
+    alert("กรุณากรอกจำนวนเงินให้ถูกต้อง");
+    return;
+  }
+  
+  const emp = data.find(x => x.id === currentAdvEid);
+  const t = calcEmpTotal(emp);
+  
+  if (amount > t.net) {
+    alert(`ไม่สามารถเบิกได้! จำนวนเงินเบิก (${fmt(amount)}) มากกว่ายอดสุทธิที่เหลืออยู่ (${fmt(t.net)})`);
+    return;
+  }
+  
+  if (!ADVANCES[currentAdvEid]) ADVANCES[currentAdvEid] = [];
+  ADVANCES[currentAdvEid].push({
+    date: dateObj,
+    amount: amount,
+    note: noteObj
+  });
+  
+  saveAdvances();
+  
+  // Re-calculate the specific employee to update UI instantly without reloading everything
+  const openModals = Array.from(document.querySelectorAll('.emp-body.open')).map(el => el.id.replace('body-', ''));
+  calculateAllData();
+  
+  openModals.forEach(id => {
+      const body = document.getElementById('body-'+id);
+      const tog = document.getElementById('toggle-'+id);
+      if (body && tog) {
+          body.classList.add('open');
+          tog.style.transform = 'rotate(180deg)';
+      }
+  });
+
+  renderAdvanceList();
+  document.getElementById('adv-amount').value = '';
+  document.getElementById('adv-note').value = '';
+  showToast('บันทึกการเบิกเงินสำเร็จ');
+}
+
+function deleteAdvance(idx) {
+  if (!currentAdvEid || !ADVANCES[currentAdvEid]) return;
+  
+  if (confirm("คุณต้องการลบรายการเบิกเงินนี้ใช่หรือไม่?")) {
+    ADVANCES[currentAdvEid].splice(idx, 1);
+    saveAdvances();
+    
+    // Refresh calculations
+    const openModals = Array.from(document.querySelectorAll('.emp-body.open')).map(el => el.id.replace('body-', ''));
+    calculateAllData();
+    openModals.forEach(id => {
+        const body = document.getElementById('body-'+id);
+        const tog = document.getElementById('toggle-'+id);
+        if (body && tog) {
+            body.classList.add('open');
+            tog.style.transform = 'rotate(180deg)';
+        }
+    });
+
+    renderAdvanceList();
+    showToast('ลบรายการเบิกสำเร็จ');
+  }
+}
+
+function timeEdit(eid, ri, field, el){
+  const emp=data.find(e=>e.id===eid);
+  const r=emp.rows[ri];
+  const raw=el.textContent.trim().replace('.', ':');
+  
+  if (raw === '-' || raw === '') {
+    r[field] = '';
+  } else if (/^\d{1,2}:\d{2}$/.test(raw)) {
+    r[field] = raw;
+  } else {
+    el.textContent = r[field] || '-';
+    return;
+  }
+  
+  el.textContent = r[field] || '-';
+  el.classList.toggle('modified', r[field] !== r['orig'+field.charAt(0).toUpperCase()+field.slice(1)]);
+
+  const cinH = parseH(r.cin);
+  const coutH = parseH(r.cout);
+  const sr = getShift(eid, cinH);
+  const otH = calcOt(eid, cinH, coutH, sr);
+  r.possibleOt = Math.round(otH * (sr.otRate || 40) * 100) / 100;
+  
+  if (coutH !== null) {
+    if (r.base === 0 && r.expectedBase > 0) r.base = r.expectedBase;
+    if (r.note && r.note.includes('รอใส่เวลาออก')) r.note = r.note.replace('รอใส่เวลาออก', '').trim();
+  } else {
+    r.base = 0;
+  }
+  
+  if (!r.manualOt) {
+    r.ot = r.possibleOt;
+  } else {
+    const row = document.getElementById('row-'+eid+'-'+ri);
+    const cb = row.querySelector('.ot-check');
+    if (cb && cb.checked) r.ot = r.possibleOt;
+    else r.ot = 0;
+  }
+  
+  const key = eid + '_' + r.date;
+  if (!EDITS[key]) EDITS[key] = {};
+  EDITS[key][field] = r[field];
+  saveEdits();
+  
+  const tbody = document.getElementById('tbody-'+eid);
+  const rows = tbody.querySelectorAll('tr');
+  rows[ri].outerHTML = buildRow(emp, r, ri);
+  
+  document.getElementById('tfoot-'+eid).innerHTML=buildTfoot(emp);
+  document.getElementById('chips-'+eid).innerHTML=buildChips(emp);
+  buildSummary(); updateGrand();
+  showToast('อัปเดตเวลา ' + r.date);
+}
+
+function cellEdit(eid, ri, field, el){
+  const emp=data.find(e=>e.id===eid);
+  const r=emp.rows[ri];
+  const raw=el.textContent.replace(/,/g,'').trim();
+  const val=parseFloat(raw);
+  if(isNaN(val)||val<0){el.textContent=fmt(r[field]);return;}
+  r[field]=Math.round(val*100)/100;
+  el.textContent=fmt(r[field]);
+  
+  const key = eid + '_' + r.date;
+  if (!EDITS[key]) EDITS[key] = {};
+  EDITS[key][field] = r[field];
+  saveEdits();
+  
+  const origKey='orig'+field.charAt(0).toUpperCase()+field.slice(1);
+  el.classList.toggle('modified',r[field]!==r[origKey]);
+  const net=Math.round((r.base+r.ot-r.deduct)*100)/100;
+  const row=document.getElementById('row-'+eid+'-'+ri);
+  row.querySelector('.td-net').textContent=fmt(net);
+  document.getElementById('tfoot-'+eid).innerHTML=buildTfoot(emp);
+  document.getElementById('chips-'+eid).innerHTML=buildChips(emp);
+  buildSummary(); updateGrand();
+  showToast('แก้ไข ' + r.date + ' ' + field);
+}
+
+function noteEdit(eid, ri, el){
+  const emp = data.find(e=>e.id===eid);
+  const r = emp.rows[ri];
+  const raw = el.textContent.trim();
+  r.adminNote = raw;
+  
+  const key = eid + '_' + r.date;
+  if (!EDITS[key]) EDITS[key] = {};
+  EDITS[key].adminNote = raw;
+  saveEdits();
+  showToast('บันทึกโน้ต ' + r.date);
+}
+
+function resetRow(e,eid,ri){
+  e.stopPropagation();
+  const emp=data.find(x=>x.id===eid);
+  const r=emp.rows[ri];
+  const key = eid + '_' + r.date;
+  delete EDITS[key];
+  saveEdits();
+  calculateAllData();
+  showToast('รีเซตค่า ' + r.date);
+}
+
+function resetAll(){
+  if(!confirm('ลบการแก้ไขตารางทั้งหมดกลับเป็นค่าเริ่มต้นไหม?'))return;
+  EDITS = {};
+  saveEdits();
+  calculateAllData();
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent='✅ '+msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function exportCSV(){
+  const lines=[['#','ชื่อ','ประเภท','อัตรา','วันที่','เข้า','ออก','สาย(นาที)','ฐาน','OT','หัก','เบิก(รายวัน)','รวม/วัน','โน้ตแอดมิน','โน้ตระบบ']];
+  data.forEach(emp=>{
+    const advances = ADVANCES[emp.id] || [];
+    emp.rows.forEach(r=>{
+      // Sum advances for this specific date
+      const dayAdv = advances.filter(a => a.date === r.date).reduce((sum, a) => sum + parseFloat(a.amount), 0);
+      const net=Math.round((r.base+r.ot-r.deduct-dayAdv)*100)/100;
+      lines.push([emp.id,emp.name,emp.type,emp.rate,r.date,r.cin,r.cout,r.late,r.base,r.ot,r.deduct,dayAdv > 0 ? dayAdv : '',net,r.adminNote||'',r.note||'']);
+    });
+    const t=calcEmpTotal(emp);
+    lines.push([emp.id,emp.name,'รวม','','','','','',t.base,t.ot,t.deduct,t.advance,t.net,'','']);
+    lines.push([]);
+  });
+  const csv=lines.map(l=>l.map(x=>'"'+(x||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='salary_march2026.csv'; a.click();
+}
+
+document.getElementById('search').addEventListener('input',function(){
+  const q=this.value.toLowerCase();
+  document.querySelectorAll('.emp-card').forEach(card=>{
+    const name=card.querySelector('.emp-name').textContent.toLowerCase();
+    card.style.display=name.includes(q)?'':'none';
+  });
+});
+
+// -- Settings Modal Logic --
+function switchTab(tab) {
+  if (tab === 'emp') {
+    document.getElementById('modal-body-emp').style.display = 'block';
+    document.getElementById('modal-body-dept').style.display = 'none';
+    document.getElementById('tab-emp').style.color = '#0f172a';
+    document.getElementById('tab-emp').style.fontSize = '1.2rem';
+    document.getElementById('tab-dept').style.color = 'var(--muted)';
+    document.getElementById('tab-dept').style.fontSize = '1.1rem';
+  } else {
+    document.getElementById('modal-body-emp').style.display = 'none';
+    document.getElementById('modal-body-dept').style.display = 'block';
+    document.getElementById('tab-dept').style.color = '#0f172a';
+    document.getElementById('tab-dept').style.fontSize = '1.2rem';
+    document.getElementById('tab-emp').style.color = 'var(--muted)';
+    document.getElementById('tab-emp').style.fontSize = '1.1rem';
+  }
+}
+
+function openSettings() {
+  const tbody = document.getElementById('settings-tbody');
+  tbody.innerHTML = '';
+  // populate rows
+  Object.keys(SHIFT).sort((a,b)=>+a-+b).forEach(eid => {
+    const s = SHIFT[eid];
+    if (!EMP_NAMES[eid] && !RAW_PUNCHES[eid]) return; // Skip ghost shifts with no data
+    
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>#${eid}</td>
+      <td>${EMP_NAMES[eid] || '?'}</td>
+      <td>
+        <select class="setup-input" id="sel-type-${eid}">
+          <option value="รายวัน" ${s.t==='รายวัน'?'selected':''}>รายวัน</option>
+          <option value="รายเดือน" ${s.t==='รายเดือน'?'selected':''}>รายเดือน</option>
+          <option value="พาร์ทไทม์" ${s.t==='พาร์ทไทม์'?'selected':''}>พาร์ทไทม์</option>
+        </select>
+      </td>
+      <td>
+        <input type="number" class="setup-input" id="inp-rate-${eid}" placeholder="เงิน" value="${s.t==='รายเดือน' ? s.mo : s.d}">
+      </td>
+      <td>
+        <input type="number" class="setup-input" id="inp-otrate-${eid}" placeholder="OT" value="${s.otRate || 40}">
+      </td>
+      <td style="color:var(--muted);font-size:0.8rem">${s.ot||'-'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  
+  const deptTbody = document.getElementById('settings-dept-tbody');
+  deptTbody.innerHTML = '';
+  Object.keys(DEPT_RULES).forEach(dept => {
+    const d = DEPT_RULES[dept];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${dept}</strong></td>
+      <td>
+        <select class="setup-input" id="sel-dtype-${dept}">
+          <option value="after" ${d.type==='after'?'selected':''}>OT หลังเลิกงาน</option>
+          <option value="before" ${d.type==='before'?'selected':''}>OT ก่อนเข้างาน</option>
+        </select>
+      </td>
+      <td><input type="number" step="0.01" class="setup-input" id="inp-dtime-${dept}" value="${d.time}"></td>
+      <td><input type="number" step="0.01" class="setup-input" id="inp-dcutoff-${dept}" value="${d.cutoff||''}"></td>
+      <td><input type="number" class="setup-input" id="inp-drate-${dept}" value="${d.rate}"></td>
+      <td style="text-align:center"><input type="checkbox" id="chk-dapp-${dept}" ${d.reqApprove?'checked':''} style="width:16px;height:16px;accent-color:var(--green)"></td>
+    `;
+    deptTbody.appendChild(tr);
+  });
+  
+  document.getElementById('settings-modal').classList.add('show');
+}
+
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('show');
+}
+
+function saveSettings() {
+  Object.keys(SHIFT).forEach(eid => {
+    const typeSel = document.getElementById('sel-type-'+eid);
+    const rateInp = document.getElementById('inp-rate-'+eid);
+    const otRateInp = document.getElementById('inp-otrate-'+eid);
+    if (!typeSel || !rateInp) return;
+    
+    const newType = typeSel.value;
+    const newRate = parseFloat(rateInp.value) || 0;
+    const newOtRate = parseFloat(otRateInp ? otRateInp.value : 0) || 40;
+    
+    SHIFT[eid].t = newType;
+    SHIFT[eid].otRate = newOtRate;
+    if (newType === 'รายเดือน') {
+      SHIFT[eid].mo = newRate;
+      SHIFT[eid].d = 0;
+    } else {
+      SHIFT[eid].mo = 0;
+      SHIFT[eid].d = newRate;
+    }
+  });
+  
+  localStorage.setItem('PAYROLL_SHIFT_202603', JSON.stringify(SHIFT));
+  
+  Object.keys(DEPT_RULES).forEach(dept => {
+    DEPT_RULES[dept].type = document.getElementById('sel-dtype-'+dept).value;
+    DEPT_RULES[dept].time = parseFloat(document.getElementById('inp-dtime-'+dept).value) || 0;
+    const cut = parseFloat(document.getElementById('inp-dcutoff-'+dept).value);
+    DEPT_RULES[dept].cutoff = isNaN(cut) ? null : cut;
+    DEPT_RULES[dept].rate = parseFloat(document.getElementById('inp-drate-'+dept).value) || 40;
+    DEPT_RULES[dept].reqApprove = document.getElementById('chk-dapp-'+dept).checked;
+  });
+  localStorage.setItem('PAYROLL_DEPT_RULES_202603', JSON.stringify(DEPT_RULES));
+  
+  closeSettings();
+  showToast('บันทึกการตั้งค่าแล้ว กำลังคำนวณใหม่...');
+  
+  // Re-calculate everything from raw punches immediately!
+  setTimeout(() => {
+    calculateAllData();
+    showToast('คำนวณเสร็จสมบูรณ์');
+  }, 100);
+}
+
+// Initialize!
+calculateAllData();
+
+</script>
+</body></html>

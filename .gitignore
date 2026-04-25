@@ -1,0 +1,31 @@
+# ข้อมูลเงินเดือนจริง (ห้ามนำขึ้นเด็ดขาด)
+*salary*.csv
+pluem.csv
+*.xlsx
+payroll_data.json
+*_export.csv
+salary_detail.txt
+temp_calc.txt
+temp_out.txt
+temp_output.txt
+
+# ไฟล์ชั่วคราว / debug
+temp_*
+test_*
+safetest*.js
+check_samples.js
+nul
+find_calc.js
+find_ot_debug.js
+patch.js
+patch.py
+fix.js
+inject_data.js
+
+# สำเนาเก่าที่มี hardcode ข้อมูลพนักงาน
+payroll_final.html
+
+# ไฟล์ log และโฟลเดอร์ที่ไม่เกี่ยวกับโค้ด
+.vscode/
+.DS_Store
+*.log
