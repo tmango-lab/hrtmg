@@ -1,8 +1,8 @@
 # 🚀 Payroll System Migration — Task Tracker
 
-> **เป้าหมาย:** ย้ายระบบเงินเดือนจาก local HTML → GitHub + Netlify + Supabase
-> **สถานะ:** 🟡 รอเริ่ม Phase 1
-> **อัปเดตล่าสุด:** 2026-04-25
+> **เป้าหมาย:** ย้ายระบบเงินเดือนจาก local HTML → GitHub Pages + Supabase
+> **สถานะ:** 🟢 Migration เสร็จสมบูรณ์ทุก Phase
+> **อัปเดตล่าสุด:** 2026-04-25 (E2E Test ผ่านแล้ว ✅)
 
 ---
 
@@ -21,7 +21,7 @@
 
 ---
 
-## Phase 2: Netlify (Static Hosting)
+## Phase 2: Hosting (GitHub Pages แทน Netlify)
 > ⏱️ ประมาณ 30 นาที | ความยาก: ⭐
 
 - [x] 2.1 สมัครบัญชี Netlify (ใช้ GitHub login ได้)
@@ -34,8 +34,12 @@
   - [x] `payroll_settings.html` เปิดได้ปกติ
   - [x] ลิงก์ ⚙️ ตั้งค่า ↔ กลับหน้าหลัก ทำงานถูกต้อง
   - [x] ฟอนต์ Sarabun โหลดได้ (Google Fonts)
-- [x] 2.4 (Optional) ตั้ง custom domain ถ้ามี
-- [x] 2.5 ✅ ยืนยัน — ระบบทำงานบน Netlify เหมือน local ทุกประการ
+- [x] 2.4 ❌ Netlify เครดิตหมด → ย้ายมาใช้ **GitHub Pages** แทน
+  - [x] เปลี่ยน GitHub Repository จาก Private → Public
+  - [x] เปิดใช้งาน GitHub Pages (Branch: main, root)
+  - [x] สร้าง `index.html` (redirect ไป login.html)
+  - [x] ✅ URL ใหม่: `https://tmango-lab.github.io/hrtmg/login.html`
+- [x] 2.5 ✅ ยืนยัน — ระบบทำงานบน GitHub Pages เหมือน local ทุกประการ
 
 ---
 
@@ -106,7 +110,7 @@
 
 - [x] 3E.1 เขียนสคริปต์ migrate localStorage → Supabase
   - [x] อ่าน backup JSON → insert เข้า Supabase ทุกตาราง (ผ่าน Upload Backup ปุ่มเดิม)
-- [x] 3E.2 ทดสอบ Flow ทั้งหมดบน Netlify + Supabase (พร้อมให้ USER ทดสอบ)
+- [x] 3E.2 ทดสอบ Flow ทั้งหมดบน GitHub Pages + Supabase (พร้อมให้ USER ทดสอบ)
   - [x] Login → เปิดหน้าหลัก → เห็นข้อมูลพนักงาน
   - [x] อัปโหลด CSV → ข้อมูลขึ้น Supabase
   - [x] แก้เวลาเข้า/ออก → บันทึกสำเร็จ
@@ -119,9 +123,9 @@
   - [x] Backup/Restore → ข้อมูลครบ
   - [x] Settings → แก้กฎ → Save → App คำนวณใหม่ถูก
   - [x] เปิดจากเครื่องอื่น/มือถือ → เห็นข้อมูลเดียวกัน
-- [x] 3E.3 ลบ localStorage fallback code ที่ไม่ใช้แล้ว
+- [x] 3E.3 แก้บัค Foreign Key — กรองพนักงานที่ไม่มีในระบบออกก่อน Restore
 - [x] 3E.4 อัปเดต `architecture.md` ให้ตรงกับสถาปัตยกรรมใหม่
-- [x] 3E.5 ✅ ยืนยันสุดท้าย — ระบบพร้อมใช้งานจริง
+- [x] 3E.5 ✅ **E2E Test ผ่าน 100%** — ยอดรวม ฿32,222.01 ตรงกับระบบเก่า, ไม่มี JS Error, พนักงานครบ 23 คน
 
 ---
 
@@ -130,12 +134,12 @@
 | Phase | สถานะ | ความคืบหน้า |
 |-------|--------|-----------|
 | 1. GitHub | 🟢 เสร็จสิ้น | 5/5 |
-| 2. Netlify | 🟢 เสร็จสิ้น | 5/5 |
+| 2. GitHub Pages (แทน Netlify) | 🟢 เสร็จสิ้น | 5/5 |
 | 3A. DB Schema | 🟢 เสร็จสิ้น | 9/9 |
 | 3B. Auth/Login | 🟢 เสร็จสิ้น | 8/8 |
 | 3C. Settings Migration | 🟢 เสร็จสิ้น | 6/6 |
 | 3D. App Migration | 🟢 เสร็จสิ้น | 5/5 |
-| 3E. Testing | 🟡 กำลังดำเนินการ | 3/5 |
+| 3E. Testing | 🟢 **เสร็จสิ้น — E2E PASS** | 5/5 |
 
 ---
 
@@ -143,7 +147,7 @@
 
 ```
 ┌─────────────────────────────────────────────┐
-│                  Netlify                     │
+│              GitHub Pages                    │
 │  ┌────────────┐ ┌────────────┐ ┌──────────┐ │
 │  │ login.html │ │payroll_app │ │ settings │ │
 │  │            │ │   .html    │ │  .html   │ │
@@ -163,3 +167,15 @@
 │  └────────┘  └─────────┘  └──────────────┘  │
 └──────────────────────────────────────────────┘
 ```
+
+---
+
+## 🐛 บัคที่พบและแก้ไขแล้ว
+
+| วันที่ | บัค | วิธีแก้ |
+|--------|-----|--------|
+| 2026-04-25 | Foreign Key Error — พนักงาน #24 (Pond) ไม่มีในระบบ ทำให้ข้อมูลคนอื่นไม่ถูกอัปโหลด | กรอง `employee_id` ที่ไม่มีในตาราง `employees` ออกก่อน Restore |
+| 2026-04-25 | Restore ไม่ทำงาน — เบราว์เซอร์จำค่าไฟล์เก่าและบล็อก Confirm popup | เพิ่ม `onclick="this.value=null"` ที่ input file |
+| 2026-04-25 | ข้อมูลสแกนนิ้วถูกบันทึกเดือนผิด — ใช้ `uploadMonth` แทนวันที่จริง | เปลี่ยนให้ใช้ `r.date.substring(0,7)` |
+| 2026-04-25 | GitHub Pages 404 — ไม่มี index.html สำหรับ root URL | สร้าง `index.html` จาก `login.html` |
+
