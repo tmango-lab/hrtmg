@@ -185,15 +185,17 @@
   },
   "active": "ae485bba92d84858",
   "lastOpenFiles": [
+    "architecture.md",
+    "skill.md",
+    "migration_tasks.md",
+    "test_e2e.js",
+    "index.html",
     "debug_compare.html",
     "ori25042569.json",
     "บัตรเวลาทั้งหมด_20260425134259_export.csv",
     "25042569.json",
-    "architecture.md",
-    "migration_tasks.md",
     "login.html",
     "supabase-client.js",
-    "supabase_schema.sql",
-    "skill.md"
+    "supabase_schema.sql"
   ]
 }

@@ -88,22 +88,17 @@
 ### 3D — ย้าย Payroll App (payroll_app.html → Supabase)
 > ⏱️ 4-6 ชม. (ส่วนที่ยากที่สุด)
 
-- [ ] 3D.1 เพิ่ม `<script src="supabase-client.js">` ใน app.html
-- [ ] 3D.2 สร้าง `async function initApp()` ครอบ logic ทั้งหมด
-- [ ] 3D.3 ย้ายการโหลดข้อมูลตอนเปิดหน้า (8 จุด)
-  - [ ] `PAYROLL_SAVED_RULES_V1` → `system_settings` + `employees`
-  - [ ] `PAYROLL_RAW_PUNCHES` → `time_punches`
-  - [ ] `PAYROLL_EDITS` → `manual_edits`
-  - [ ] `PAYROLL_ADVANCE` → `advances`
-  - [ ] `PAYROLL_ERRANDS` → `errands`
-- [x] 3D.1 Refactor `payroll_app.html` to remove synchronous `localStorage` reading.
-- [x] 3D.2 Create `initApp()` asynchronous loading sequence to fetch:
-  - `system_settings`
-  - `employees`
-  - `time_punches`, `manual_edits`, `advances`, `errands` based on active month.
-- [x] 3D.3 Protect page with `requireAuth()`.
-- [x] 3D.4 Create asynchronous save hooks for manual adjustments (`saveEditsToCloud`, `saveAdvancesToCloud`, `saveErrandsToCloud`, `saveRawPunchesToCloud`).
-- [x] 3D.5 Test edge case: Ensuring UI is non-blocking when data saves.
+- [x] 3D.1 เพิ่ม `<script src="supabase-client.js">` ใน app.html
+- [x] 3D.2 สร้าง `async function initApp()` ครอบ logic ทั้งหมด
+- [x] 3D.3 ย้ายการโหลดข้อมูลตอนเปิดหน้า ครบทุกจุด
+  - [x] `PAYROLL_SAVED_RULES_V1` → `system_settings` + `employees`
+  - [x] `PAYROLL_RAW_PUNCHES` → `time_punches`
+  - [x] `PAYROLL_EDITS` → `manual_edits`
+  - [x] `PAYROLL_ADVANCE` → `advances`
+  - [x] `PAYROLL_ERRANDS` → `errands`
+- [x] 3D.4 Protect page with `requireAuth()`
+- [x] 3D.5 สร้าง async save hooks (`saveEditsToCloud`, `saveAdvancesToCloud`, `saveErrandsToCloud`, `saveRawPunchesToCloud`)
+- [x] 3D.6 ✅ ทดสอบ — UI ไม่ค้างระหว่างบันทึกข้อมูล, ข้อมูลโหลดครบทุกตาราง
 
 ### 3E — Migration + Testing
 > ⏱️ 2-3 ชม.
