@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Debug Compare</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<style>body{font-family:monospace;background:#111;color:#eee;padding:20px}
+table{border-collapse:collapse}td,th{border:1px solid #555;padding:4px 8px;text-align:right}
+th{background:#333}.diff{color:#f44;font-weight:bold}.ok{color:#4f4}</style>
+</head><body>
+<h2>🔍 Supabase Data Diagnostic</h2>
+<pre id="log">Waiting for auth...</pre>
+<div id="out"></div>
+<script>
+async function run() {
+  const log = document.getElementById('log');
+  const out = document.getElementById('out');
+  
+  const session = await supabase.auth.getSession();
+  if (!session.data.session) {
+    log.textContent = '❌ Not logged in. Go to /login.html first, then come back here.';
+    return;
+  }
+  log.textContent = '✅ Authenticated. Querying Supabase...\n';
+
+  // Query all tables for month 2026-04
+  const [pRes, eRes, aRes, errRes, empRes, setRes] = await Promise.all([
+    supabase.from('time_punches').select('*').eq('month', '2026-04'),
+    supabase.from('manual_edits').select('*').eq('month', '2026-04'),
+    supabase.from('advances').select('*').eq('month', '2026-04'),
+    supabase.from('errands').select('*').eq('month', '2026-04'),
+    supabase.from('employees').select('*'),
+    supabase.from('system_settings').select('*').eq('id', 'main').maybeSingle()
+  ]);
+
+  const punches = pRes.data || [];
+  const edits = eRes.data || [];
+  const advances = aRes.data || [];
+  const errands = errRes.data || [];
+  const employees = empRes.data || [];
+
+  log.textContent += `time_punches: ${punches.length} rows\n`;
+  log.textContent += `manual_edits: ${edits.length} rows\n`;
+  log.textContent += `advances: ${advances.length} rows\n`;
+  log.textContent += `errands: ${errands.length} rows\n`;
+  log.textContent += `employees: ${employees.length} rows\n`;
+  log.textContent += `system_settings: ${setRes.data ? 'found' : 'MISSING'}\n\n`;
+
+  // Count DB punches per employee (April dates only)
+  const dbPunchByEmp = {};
+  const dbPunchAprilByEmp = {};
+  punches.forEach(p => {
+    dbPunchByEmp[p.employee_id] = (dbPunchByEmp[p.employee_id]||0) + 1;
+    if (p.punch_date && p.punch_date.startsWith('2026-04')) {
+      dbPunchAprilByEmp[p.employee_id] = (dbPunchAprilByEmp[p.employee_id]||0) + 1;
+    }
+  });
+
+  // Count DB advances per employee
+  const dbAdvByEmp = {};
+  advances.forEach(a => { dbAdvByEmp[a.employee_id] = (dbAdvByEmp[a.employee_id]||0) + 1; });
+
+  // Count DB edits per employee
+  const dbEditByEmp = {};
+  edits.forEach(e => { dbEditByEmp[e.employee_id] = (dbEditByEmp[e.employee_id]||0) + 1; });
+
+  // Count DB errands per employee
+  const dbErrByEmp = {};
+  errands.forEach(e => { dbErrByEmp[e.employee_id] = (dbErrByEmp[e.employee_id]||0) + 1; });
+
+  // Now load ori JSON to compare
+  log.textContent += 'Loading ori JSON for comparison...\n';
+  const oriResp = await fetch('ori25042569.json');
+  const ori = await oriResp.json();
+
+  // ORI punch counts (April only)
+  const oriPunchByEmp = {};
+  for (const eid in ori.rawPunches) {
+    oriPunchByEmp[eid] = ori.rawPunches[eid].filter(r => r.date.startsWith('2026-04')).length;
+  }
+
+  // ORI advance counts (April only)
+  const oriAdvByEmp = {};
+  for (const eid in (ori.advances||{})) {
+    oriAdvByEmp[eid] = ori.advances[eid].filter(a => a.date && a.date.startsWith('2026-04')).length;
+  }
+
+  // ORI edit counts (April only)
+  const oriEditByEmp = {};
+  for (const k in (ori.edits||{})) {
+    const parts = k.split('_');
+    const eid = parts[0];
+    const dateStr = parts.slice(1).join('-');
+    if (dateStr.startsWith('2026-04')) {
+      oriEditByEmp[eid] = (oriEditByEmp[eid]||0) + 1;
+    }
+  }
+
+  // ORI errands (April only)
+  const oriErrByEmp = {};
+  for (const eid in (ori.errands||{})) {
+    oriErrByEmp[eid] = (ori.errands[eid]||[]).filter(e => e.date && e.date.startsWith('2026-04')).length;
+  }
+
+  // Build comparison table
+  const oriRules = typeof ori.settings.savedRulesV1 === 'string' ? JSON.parse(ori.settings.savedRulesV1) : ori.settings.savedRulesV1;
+  const allEids = [...new Set([
+    ...Object.keys(oriRules.shiftProfiles),
+    ...employees.map(e=>String(e.id))
+  ])].sort((a,b)=>+a-+b);
+
+  let html = '<h3>Per-Employee Data Comparison: ORI JSON vs Supabase DB</h3>';
+  html += '<table><tr><th>ID</th><th>Name</th>';
+  html += '<th>ORI Punches (Apr)</th><th>DB Punches (Apr)</th><th>Match?</th>';
+  html += '<th>ORI Advances</th><th>DB Advances</th><th>Match?</th>';
+  html += '<th>ORI Edits</th><th>DB Edits</th><th>Match?</th>';
+  html += '<th>ORI Errands</th><th>DB Errands</th><th>Match?</th>';
+  html += '</tr>';
+
+  let totalIssues = 0;
+  for (const eid of allEids) {
+    const name = oriRules.shiftProfiles[eid]?.name || '???';
+    const op = oriPunchByEmp[eid]||0;
+    const dp = dbPunchAprilByEmp[eid]||0;
+    const oa = oriAdvByEmp[eid]||0;
+    const da = dbAdvByEmp[eid]||0;
+    const oe = oriEditByEmp[eid]||0;
+    const de = dbEditByEmp[eid]||0;
+    const oer = oriErrByEmp[eid]||0;
+    const der = dbErrByEmp[eid]||0;
+
+    const pm = op===dp;
+    const am = oa===da;
+    const em = oe===de;
+    const erm = oer===der;
+    if(!pm||!am||!em||!erm) totalIssues++;
+
+    html += `<tr>`;
+    html += `<td>${eid}</td><td style="text-align:left">${name}</td>`;
+    html += `<td>${op}</td><td>${dp}</td><td class="${pm?'ok':'diff'}">${pm?'✅':'❌'}</td>`;
+    html += `<td>${oa}</td><td>${da}</td><td class="${am?'ok':'diff'}">${am?'✅':'❌'}</td>`;
+    html += `<td>${oe}</td><td>${de}</td><td class="${em?'ok':'diff'}">${em?'✅':'❌'}</td>`;
+    html += `<td>${oer}</td><td>${der}</td><td class="${erm?'ok':'diff'}">${erm?'✅':'❌'}</td>`;
+    html += '</tr>';
+  }
+  html += '</table>';
+  html += `<h3>Total employees with data mismatches: <span class="${totalIssues?'diff':'ok'}">${totalIssues}</span></h3>`;
+
+  // Also show punch dates that are NOT April
+  const nonAprilPunches = punches.filter(p => !p.punch_date.startsWith('2026-04'));
+  if (nonAprilPunches.length > 0) {
+    html += `<h3 class="diff">⚠️ ${nonAprilPunches.length} punch rows in DB have non-April dates!</h3>`;
+    html += '<pre>' + JSON.stringify(nonAprilPunches.slice(0,5).map(p=>({eid:p.employee_id,date:p.punch_date})), null, 2) + '</pre>';
+  }
+
+  // Show if any punch errors
+  if (pRes.error) html += `<h3 class="diff">DB Error: ${JSON.stringify(pRes.error)}</h3>`;
+  if (eRes.error) html += `<h3 class="diff">DB Error edits: ${JSON.stringify(eRes.error)}</h3>`;
+  if (aRes.error) html += `<h3 class="diff">DB Error advances: ${JSON.stringify(aRes.error)}</h3>`;
+
+  out.innerHTML = html;
+  log.textContent += `\nDone! Found ${totalIssues} employees with data mismatches.`;
+}
+run();
+</script>
+</body></html>
