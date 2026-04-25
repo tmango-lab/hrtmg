@@ -1323,7 +1323,7 @@ function renderAll(){
       <div class="emp-actions" onclick="event.stopPropagation()">
         ${emp.type === 'รายเดือน' ? `<button class="btn-action btn-cal" onclick="openCalendarModal(event,'${emp.id}')">🗓️ จัดการวันหยุดพักผ่อน</button>` : '<div></div>'}
         <button class="btn-action btn-adv" onclick="openAdvanceModal(event,'${emp.id}')">💸 เบิกเงิน</button>
-        <button class="btn-action btn-err" onclick="openErrandModal(event,'${emp.id}')">🏃 จดค่าธุระ</button>
+        <button class="btn-action btn-err" onclick="openErrandModal(event,'${emp.id}')">🏃 ธุระ</button>
       </div>
       <div class="emp-chips" id="chips-${emp.id}">${buildChips(emp)}</div>
       <div class="emp-toggle" id="toggle-${emp.id}">▼</div>
