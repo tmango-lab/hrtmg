@@ -1872,13 +1872,13 @@ function handleBackupUpload(event) {
                     daily_rate: e.d || 0,
                     monthly_rate: e.mo || 0,
                     hours_per_day: e.hrs || 8,
-                    ot_rate: e.otRate || 40,
                     ot_type: e.otType || 'none',
                     late_type: e.lateType || 'general',
-                    department_id: e.dept || 'other'
+                    dept: e.dept || 'other'
                 };
             });
-            await supabase.from('employees').upsert(empPayload);
+            const { error: empErr } = await supabase.from('employees').upsert(empPayload);
+            if (empErr) console.error("Employee Upsert Error:", empErr);
           }
           
           if (rules.globalRules || rules.shiftTemplates || rules.otDepartmentRules) {
@@ -1889,7 +1889,8 @@ function handleBackupUpload(event) {
                 ot_rules: rules.otDepartmentRules || {},
                 global_rules: rules.globalRules || {}
             };
-            await supabase.from('system_settings').upsert(settingsPayload);
+            const { error: setErr } = await supabase.from('system_settings').upsert(settingsPayload);
+            if (setErr) console.error("Settings Upsert Error:", setErr);
           }
         } catch(e) {
           console.error("Failed to migrate settings", e);
