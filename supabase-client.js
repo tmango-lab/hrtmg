@@ -6,7 +6,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_NR6Fzy3rTEEeNQWDIRA0Yg_RHHcFqsW';
 
 // สร้าง client (ตัวแปร global)
 // หมายเหตุ: ต้องมี <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> นำหน้าก่อน
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // เช็ค session ล่าสุด
 async function getSession() {
