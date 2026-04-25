@@ -1863,11 +1863,10 @@ function handleBackupUpload(event) {
     try {
       const parsed = JSON.parse(e.target.result);
       if (!parsed || !parsed.rawPunches || !parsed.settings) {
-        alert("ไฟล์ Backup ไม่ถูกต้อง หรือไม่ใช่ไฟล์ Backup ของระบบนี้");
+        showToast("ไฟล์ Backup ไม่ถูกต้อง หรือไม่ใช่ไฟล์ Backup ของระบบนี้");
         return;
       }
-      if (!confirm(`คุณต้องการ Migrate Backup เดือน ${parsed.month || CURRENT_MONTH} ขึ้น Supabase ใช่หรือไม่?\nข้อมูลเวลาบนคลาวด์ในเดือนนี้จะถูกเขียนทับด้วย Backup ทันที`)) return;
-
+      // ข้ามการใช้ confirm() ไปเลยเผื่อเบราว์เซอร์บล็อก popup
       const uploadMonth = parsed.month || CURRENT_MONTH;
       document.getElementById('main').innerHTML = '<div style="text-align:center;padding:50px;font-size:1.2rem;color:var(--primary);">⏳ กำลังนำเข้าข้อมูลขึ้น Supabase... กรุณารอสักครู่</div>';
 
