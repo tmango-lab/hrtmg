@@ -1915,8 +1915,10 @@ function handleBackupUpload(event) {
       const tpPayload = [];
       if (parsed.rawPunches) {
         for (const eid in parsed.rawPunches) {
+          if (!EMP_NAMES[eid]) continue; // Skip employees that don't exist in DB to prevent foreign key errors
           parsed.rawPunches[eid].forEach(r => {
-            tpPayload.push({ employee_id: eid, month: uploadMonth, punch_date: r.date, clock_in: r.cin, clock_out: r.cout, late_minutes: Number(r.lateM||0) });
+            const actualMonth = r.date.substring(0, 7); // Use actual month of punch (e.g., '2026-03' or '2026-04')
+            tpPayload.push({ employee_id: eid, month: actualMonth, punch_date: r.date, clock_in: r.cin, clock_out: r.cout, late_minutes: Number(r.lateM||0) });
           });
         }
       }
@@ -1926,7 +1928,9 @@ function handleBackupUpload(event) {
       if (parsed.edits) {
         for (const key in parsed.edits) {
           const [eid, ...dateParts] = key.split('_');
-          edPayload.push({ employee_id: eid, month: uploadMonth, edit_date: dateParts.join('_'), edit_data: parsed.edits[key] });
+          if (!EMP_NAMES[eid]) continue;
+          const actualMonth = dateParts.join('_').substring(0, 7);
+          edPayload.push({ employee_id: eid, month: actualMonth, edit_date: dateParts.join('_'), edit_data: parsed.edits[key] });
         }
       }
 
@@ -1934,8 +1938,10 @@ function handleBackupUpload(event) {
       const advPayload = [];
       if (parsed.advances) {
         for (const eid in parsed.advances) {
+          if (!EMP_NAMES[eid]) continue;
           parsed.advances[eid].forEach(a => {
-            advPayload.push({ employee_id: eid, month: uploadMonth, advance_date: a.date, amount: Number(a.amount||0), note: a.note||'' });
+            const actualMonth = a.date.substring(0, 7);
+            advPayload.push({ employee_id: eid, month: actualMonth, advance_date: a.date, amount: Number(a.amount||0), note: a.note||'' });
           });
         }
       }
@@ -1944,8 +1950,10 @@ function handleBackupUpload(event) {
       const errPayload = [];
       if (parsed.errands) {
         for (const eid in parsed.errands) {
+          if (!EMP_NAMES[eid]) continue;
           parsed.errands[eid].forEach(err => {
-            errPayload.push({ employee_id: eid, month: uploadMonth, errand_date: err.date, start_time: err.start, end_time: err.end, minutes: Number(err.mins||0), amount: Number(err.amount||0) });
+            const actualMonth = err.date.substring(0, 7);
+            errPayload.push({ employee_id: eid, month: actualMonth, errand_date: err.date, start_time: err.start, end_time: err.end, minutes: Number(err.mins||0), amount: Number(err.amount||0) });
           });
         }
       }
