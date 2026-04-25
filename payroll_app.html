@@ -1854,9 +1854,49 @@ function handleBackupUpload(event) {
       if (!confirm(`คุณต้องการ Migrate Backup เดือน ${parsed.month || CURRENT_MONTH} ขึ้น Supabase ใช่หรือไม่?\nข้อมูลเวลาบนคลาวด์ในเดือนนี้จะถูกเขียนทับด้วย Backup ทันที`)) return;
 
       const uploadMonth = parsed.month || CURRENT_MONTH;
-      document.getElementById('payroll-table').innerHTML = '<tr><td colspan="15" style="text-align:center;padding:50px;">⏳ กำลังนำเข้าข้อมูลขึ้น Supabase... กรุณารอสักครู่</td></tr>';
+      document.getElementById('main').innerHTML = '<div style="text-align:center;padding:50px;font-size:1.2rem;color:var(--primary);">⏳ กำลังนำเข้าข้อมูลขึ้น Supabase... กรุณารอสักครู่</div>';
 
-      // Prepare Raw Punches
+      // 1. Upload Settings & Employees First
+      if (parsed.settings.savedRulesV1) {
+        try {
+          const rules = typeof parsed.settings.savedRulesV1 === 'string' ? JSON.parse(parsed.settings.savedRulesV1) : parsed.settings.savedRulesV1;
+          
+          if (rules.shiftProfiles) {
+            const empPayload = Object.keys(rules.shiftProfiles).map(eid => {
+                const e = rules.shiftProfiles[eid];
+                return {
+                    id: eid,
+                    name: e.name,
+                    shift_id: e.shiftId,
+                    type: e.t,
+                    daily_rate: e.d || 0,
+                    monthly_rate: e.mo || 0,
+                    hours_per_day: e.hrs || 8,
+                    ot_rate: e.otRate || 40,
+                    ot_type: e.otType || 'none',
+                    late_type: e.lateType || 'general',
+                    department_id: e.dept || 'other'
+                };
+            });
+            await supabase.from('employees').upsert(empPayload);
+          }
+          
+          if (rules.globalRules || rules.shiftTemplates || rules.otDepartmentRules) {
+            const settingsPayload = {
+                id: 'main',
+                departments: rules.departments || [],
+                shift_templates: rules.shiftTemplates || {},
+                ot_rules: rules.otDepartmentRules || {},
+                global_rules: rules.globalRules || {}
+            };
+            await supabase.from('system_settings').upsert(settingsPayload);
+          }
+        } catch(e) {
+          console.error("Failed to migrate settings", e);
+        }
+      }
+
+      // 2. Prepare Raw Punches
       const tpPayload = [];
       if (parsed.rawPunches) {
         for (const eid in parsed.rawPunches) {
@@ -1866,7 +1906,7 @@ function handleBackupUpload(event) {
         }
       }
       
-      // Prepare Edits
+      // 3. Prepare Edits
       const edPayload = [];
       if (parsed.edits) {
         for (const key in parsed.edits) {
@@ -1875,7 +1915,7 @@ function handleBackupUpload(event) {
         }
       }
 
-      // Prepare Advances
+      // 4. Prepare Advances
       const advPayload = [];
       if (parsed.advances) {
         for (const eid in parsed.advances) {
@@ -1885,7 +1925,7 @@ function handleBackupUpload(event) {
         }
       }
 
-      // Prepare Errands
+      // 5. Prepare Errands
       const errPayload = [];
       if (parsed.errands) {
         for (const eid in parsed.errands) {
@@ -1895,7 +1935,7 @@ function handleBackupUpload(event) {
         }
       }
 
-      // Upload to Supabase
+      // 6. Upload Time Data to Supabase
       if (tpPayload.length > 0) await supabase.from('time_punches').upsert(tpPayload, { onConflict: 'employee_id, punch_date' });
       if (edPayload.length > 0) await supabase.from('manual_edits').upsert(edPayload, { onConflict: 'employee_id, edit_date' });
       
@@ -1907,7 +1947,6 @@ function handleBackupUpload(event) {
         await supabase.from('errands').delete().eq('month', uploadMonth);
         await supabase.from('errands').insert(errPayload);
       }
-
       showToast('Migrate Backup สำเร็จ!');
       
       // Redirect to the uploaded month to reload data
