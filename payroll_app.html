@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>💰 ระบบคำนวณเงินเดือน</title>
+<title>ระบบคำนวณเงินเดือน</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -151,15 +151,16 @@ body {
   transition: all 0.2s;
   box-shadow: var(--card-shadow);
 }
-.emp-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.emp-card:hover { border-color: #cbd5e1; }
 .emp-header { 
   padding: 12px 20px; 
   display: flex; 
   align-items: center; 
   gap: 16px; 
-  cursor: pointer; 
+  cursor: pointer;
   user-select: none;
 }
+.emp-header:hover { background: #fafafa; }
 .emp-avatar { 
   width: 40px; 
   height: 40px; 
@@ -173,7 +174,7 @@ body {
   font-size: 0.9rem; 
   flex-shrink: 0;
 }
-.emp-info { flex-shrink: 0; min-width: 160px; }
+.emp-info { flex-shrink: 0; width: 180px; }
 .emp-name { font-size: 0.95rem; font-weight: 700; color: #1e293b; }
 .emp-meta { font-size: 0.75rem; color: var(--muted); }
 
@@ -211,7 +212,8 @@ body {
   align-items: center; 
   flex: 1; 
   justify-content: flex-end;
-  margin-left: 20px;
+  margin-left: 8px;
+  pointer-events: none; /* chips ไม่ดักคลิก */
 }
 .chip { 
   padding: 6px 12px; 
@@ -228,32 +230,96 @@ body {
 .chip-advance { background: #fffbeb; color: var(--yellow); }
 .chip-total { background: #f5f3ff; color: var(--purple); font-weight: 700; }
 
-.emp-card.selected { border-color: var(--accent); background: #f0fdf4; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1); }
-.emp-toggle { color: #94a3b8; transition: 0.3s; font-size: 0.8rem; padding: 4px; }
+/* Header chips — สรุปตัวเลขบนแถบชื่อพนักงาน */
+.emp-chips {
+  display: flex; gap: 6px; align-items: center;
+  margin-left: auto; pointer-events: none; flex-shrink: 0;
+}
+.hchip {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 4px 10px; border-radius: 8px;
+  min-width: 72px; line-height: 1.2;
+}
+.hchip-label { font-size: 0.65rem; font-weight: 600; opacity: 0.65; text-transform: uppercase; letter-spacing: 0.04em; }
+.hchip-val   { font-size: 0.82rem; font-weight: 700; white-space: nowrap; }
+.hchip-base    { background: #eff6ff; color: var(--blue); }
+.hchip-ot      { background: #f0fdf4; color: var(--green); }
+.hchip-deduct  { background: #fef2f2; color: var(--red); }
+.hchip-advance { background: #fffbeb; color: var(--yellow); }
+.hchip-advance.dim { background: #f8fafc; color: #cbd5e1; }
+.hchip-net     { background: #f5f3ff; color: var(--purple); }
+.hchip-net .hchip-val { font-size: 0.88rem; font-weight: 800; }
+
+.emp-card.selected { 
+  border-color: #94a3b8; 
+  background: #ffffff; 
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
+}
+.emp-toggle { color: #94a3b8; transition: 0.3s; font-size: 0.8rem; padding: 4px 4px 4px 16px; pointer-events: none; flex-shrink: 0; }
 .emp-body { display: none; border-top: 1px solid #f1f5f9; }
-.emp-body.open { display: block; }
+.emp-body.open { display: block !important; }
+
+/* Actions bar — แสดงเมื่อกางออก */
+.emp-actions-bar {
+  display: flex; gap: 8px; align-items: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafafa;
+  flex-wrap: wrap;
+}
+.emp-actions-bar .btn-action {
+  height: 28px;
+  padding: 0 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 99px;
+  width: auto;
+  min-width: unset;
+}
+
+/* ปุ่มใน header แถวเดียวกับชื่อ */
+.emp-header-actions {
+  display: grid; grid-template-columns: 88px 88px 88px; gap: 6px; margin-left: 16px; align-items: center;
+}
+.emp-header-actions .btn-action {
+  height: 28px;
+  padding: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 99px;
+  width: 100%;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Chips summary row ในตาราง */
+.chips-row td {
+  border-top: 2px solid #e2e8f0;
+  font-weight: 700;
+}
 
 /* ── Table ── */
 .tbl-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; table-layout: fixed; }
 thead th { 
   background: #f8fafc; 
   padding: 10px 16px; 
   text-align: right; 
   color: var(--muted); 
   font-weight: 600; 
-  font-size: 0.75rem; 
+  font-size: 0.82rem; 
   text-transform: uppercase; 
   letter-spacing: 0.05em; 
   border-bottom: 1px solid #f1f5f9;
 }
-thead th:first-child, thead th:nth-child(2), thead th:nth-child(3), thead th:nth-child(4) { text-align: left; }
+thead th:nth-child(1) { text-align: left; }
+thead th:nth-child(2), thead th:nth-child(3), thead th:nth-child(4) { text-align: center; }
 tbody tr { border-bottom: 1px solid #f1f5f9; transition: background 0.15s; }
 tbody tr:hover { background: #f8fafc; }
 td { padding: 8px 16px; white-space: nowrap; text-align: right; color: #334155; }
-td:first-child, td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: left; }
+td:nth-child(1) { text-align: left; }
+td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: center; }
 
-.td-date { color: var(--muted); font-size: 0.8rem; }
+.td-date { color: var(--muted); font-size: 0.88rem; }
 .td-time { color: var(--blue); font-weight: 500; }
 .td-late { color: var(--red); font-weight: 600; }
 
@@ -262,10 +328,12 @@ td:first-child, td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: 
   cursor: text; 
   border-radius: 6px; 
   padding: 4px 8px; 
+  margin-right: -8px;
   min-width: 60px; 
   display: inline-block; 
   border: 1px solid transparent; 
   transition: all 0.2s;
+  text-align: right;
 }
 .editable:hover { border-color: #e2e8f0; background: #fff; }
 .editable:focus { outline: none; border-color: var(--accent); background: #fff; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1); }
@@ -275,40 +343,138 @@ td:first-child, td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: 
 .td-deduct .editable { color: var(--red); }
 .td-net { font-weight: 700; color: var(--purple); }
 
-/* Footer row */
-.tfoot-row td { background: #f8fafc; font-weight: 700; border-top: 2px solid #f1f5f9; padding: 12px 16px; }
-.tfoot-row .total-net { color: var(--purple); font-size: 1rem; }
+/* ── Note Cell ── */
+.note-cell { min-width: 280px; padding: 8px 16px !important; vertical-align: middle; }
+.note-cell-inner { display: flex; flex-direction: column; gap: 4px; align-items: stretch; }
+.sys-notes { display: flex; flex-wrap: wrap; gap: 4px; }
+.sys-note-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.78rem; font-weight: 600; padding: 2px 8px;
+  border-radius: 99px; white-space: nowrap;
+}
+.sys-note-badge.off-day { background: #eff6ff; color: #3b82f6; }
+.sys-note-badge.shop-closed { background: #fffbeb; color: #d97706; }
+.sys-note-badge.errand { background: #fef2f2; color: #ef4444; }
+.sys-note-badge.warning { background: #fef2f2; color: #ef4444; }
+.sys-note-badge.info { background: #f0fdf4; color: #16a34a; }
+.admin-note-wrap { position: relative; margin-top: 2px; }
+.admin-note-input {
+  width: 100%; font-family: inherit; font-size: 0.88rem; color: #334155;
+  background: transparent; border: none; border-bottom: 1px dashed #e2e8f0;
+  padding: 2px 4px; outline: none; min-width: 260px;
+  transition: border-color 0.2s; text-align: right;
+}
+.admin-note-input:hover { border-bottom-color: #94a3b8; }
+.admin-note-input:focus { border-bottom-color: var(--blue); background: #eff6ff; border-radius: 4px 4px 0 0; }
+.admin-note-input::placeholder { color: #cbd5e1; font-style: italic; text-align: right; }
+.note-actions { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.btn-ot-label { 
+  font-size: 0.78rem; padding: 2px 8px; border-radius: 99px; 
+  background: #f0fdf4; border: 1px solid #dcfce7; color: #16a34a;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+}
+.btn-shop-closed {
+  font-size: 0.78rem; padding: 2px 8px; border-radius: 99px;
+  border: 1px solid #fde68a; color: #d97706; background: #fffbeb;
+  cursor: pointer; transition: 0.2s;
+}
+.btn-shop-closed.active { background: #d97706; color: #fff; border-color: #d97706; }
+.btn-reset-row {
+  font-size: 0.78rem; padding: 2px 8px; border-radius: 99px;
+  border: 1px solid #fecaca; color: #ef4444; background: #fff;
+  cursor: pointer; transition: 0.2s;
+}
+.btn-reset-row:hover { background: #fef2f2; }
 
 /* Modals */
 .modal-overlay { 
   position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
   background: rgba(15, 23, 42, 0.5); 
   display: none; align-items: center; justify-content: center; 
-  z-index: 1000; backdrop-filter: blur(4px); 
+  z-index: 1000; backdrop-filter: blur(8px); 
 }
 .modal-overlay.show { display: flex; }
 .modal-content { 
   background: #fff; border-radius: 16px; width: 90%; 
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); 
-  overflow: hidden; animation: modalPop 0.3s ease;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25); 
+  overflow: hidden; animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid #f1f5f9;
 }
-@keyframes modalPop { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes modalPop { 
+  from { transform: scale(0.95) translateY(10px); opacity: 0; } 
+  to { transform: scale(1) translateY(0); opacity: 1; } 
+}
 
-.modal-header { padding: 16px 24px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
-.modal-body { padding: 24px; overflow-y: auto; max-height: 80vh; }
-.modal-footer { padding: 16px 24px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 8px; background: #f8fafc; }
+.modal-header { 
+  padding: 20px 24px; 
+  border-bottom: 1px solid #f1f5f9; 
+  display: flex; justify-content: space-between; align-items: center; 
+  background: #fff;
+}
+.modal-header h2 { font-size: 1.25rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px; margin: 0;}
+.modal-close {
+  background: transparent; border: none; font-size: 1.5rem; color: #94a3b8;
+  cursor: pointer; transition: 0.2s; padding: 4px 8px; border-radius: 8px;
+}
+.modal-close:hover { color: #ef4444; background: #fef2f2; }
+
+.modal-body { padding: 24px; overflow-y: auto; max-height: 75vh; }
+.modal-footer { 
+  padding: 16px 24px; border-top: 1px solid #f1f5f9; 
+  display: flex; justify-content: flex-end; gap: 12px; background: #f8fafc; 
+}
+
+/* Custom Modal Inputs */
+.setup-input {
+  width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px;
+  font-family: inherit; font-size: 0.95rem; color: var(--text); background: #fff;
+  transition: all 0.2s ease; height: 42px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+.setup-input:focus {
+  outline: none; border-color: var(--accent); background: #fff;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+}
+.setup-input::placeholder { color: #94a3b8; }
+
+/* Modal Tables */
+.settings-table {
+  width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 8px;
+  border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+.settings-table th {
+  background: #f8fafc; padding: 14px 16px; font-size: 0.8rem; font-weight: 700;
+  color: var(--muted); border-bottom: 1px solid #e2e8f0; text-align: left;
+}
+.settings-table td {
+  padding: 14px 16px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; color: #334155; vertical-align: middle;
+}
+.settings-table tr:last-child td { border-bottom: none; }
+.settings-table tbody tr:hover { background: #f8fafc; }
+
+/* Outline Button & Modal Add Button */
+.btn-outline {
+  background: #fff; border: 1px solid #cbd5e1; color: #475569;
+  padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;
+  font-family: inherit; font-size: 0.9rem; height: 42px; display: inline-flex; align-items: center; justify-content: center;
+}
+.btn-outline:hover { background: #f8fafc; border-color: #94a3b8; color: #1e293b; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+.btn-add-modal { height: 42px; padding: 0 20px; font-size: 0.95rem; border-radius: 8px; }
 
 /* Calendar */
-.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-.cal-day { border: 1px solid #f1f5f9; border-radius: 8px; padding: 10px 0; text-align: center; cursor: pointer; transition: 0.2s; }
-.cal-day:hover { border-color: var(--blue); background: #f0f9ff; }
-.cal-day.active { background: #eff6ff; border-color: var(--blue); color: var(--blue); font-weight: 700; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 12px;}
+.cal-day { 
+  border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 0; 
+  text-align: center; cursor: pointer; transition: all 0.2s; background: #fff; font-weight: 500;
+}
+.cal-day:hover { border-color: var(--blue); background: #eff6ff; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(59,130,246,0.1); }
+.cal-day.active { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 700; box-shadow: 0 4px 6px -1px rgba(59,130,246,0.25); }
 
 /* Toast */
 #toast { 
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); 
   background: #1e293b; color: #fff; padding: 12px 24px; border-radius: 99px; 
-  font-size: 0.9rem; font-weight: 500; transition: 0.3s; z-index: 2000; opacity: 0;
+  font-size: 0.9rem; font-weight: 500; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 2000; opacity: 0;
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
@@ -317,7 +483,7 @@ td:first-child, td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: 
 <body>
 <div class="header">
   <div>
-    <h1>💰 ระบบคำนวณเงินเดือน</h1>
+    <h1>ระบบคำนวณเงินเดือน</h1>
     <div class="subtitle" id="header-subtitle">กำลังโหลด...</div>
   </div>
   <div class="grand-total">
@@ -328,24 +494,34 @@ td:first-child, td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: 
 
 <div class="toolbar">
   <div class="search-box-wrap">
-    <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none;">🔍</span>
+    <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; display:flex;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
     <input class="search-box" id="search" type="text" placeholder="ค้นหาชื่อพนักงาน...">
   </div>
   
   <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <div style="position:relative; display:inline-flex; align-items:center;" id="month-picker-wrapper">
+      <button class="btn btn-outline" style="border-color:var(--blue); color:var(--blue); min-width:140px; justify-content:center; gap:6px; font-weight:600;" onclick="toggleMonthPicker()">
+        📅 <span id="month-text-display">เดือน...</span>
+      </button>
+      
+      <div id="custom-month-picker" style="display:none; position:absolute; top:100%; left:0; margin-top:8px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 10px 25px -5px rgba(0,0,0,0.1); width:280px; z-index:1000; padding:16px; overflow:hidden;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; padding-bottom:12px; border-bottom:1px dashed #e2e8f0;">
+          <button class="btn btn-outline" style="padding:4px 12px; height:32px; min-width:unset; border-radius:8px; border:none; background:#f1f5f9;" onclick="changePickerYear(-1)">◀</button>
+          <div style="font-weight:800; font-size:1.15rem; color:#1e293b;" id="picker-year-display">2026</div>
+          <button class="btn btn-outline" style="padding:4px 12px; height:32px; min-width:unset; border-radius:8px; border:none; background:#f1f5f9;" onclick="changePickerYear(1)">▶</button>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;" id="picker-months-grid"></div>
+      </div>
+    </div>
     <button class="btn" onclick="expandAll()">ขยายทั้งหมด</button>
     <button class="btn" onclick="collapseAll()">ย่อทั้งหมด</button>
-    <button class="btn btn-warning" onclick="exportBackup()">📤 Backup</button>
-    <input type="file" id="backup-upload" accept=".json" style="display: none;" onclick="this.value=null" onchange="handleBackupUpload(event)">
-    <button class="btn btn-warning" onclick="document.getElementById('backup-upload').click()">📥 Restore</button>
     
     <input type="file" id="csv-upload" accept=".csv" style="display: none;" onclick="this.value=null" onchange="handleCSVUpload(event)">
-    <button class="btn btn-success" onclick="document.getElementById('csv-upload').click()">🟢 อัปโหลด CSV (สแกนนิ้ว)</button>
-    <button class="btn btn-success" onclick="exportCSV()">📊 ส่งออก Excel</button>
-    <button class="btn" onclick="window.print()">🖨️ พิมพ์</button>
+    <button class="btn btn-success" onclick="document.getElementById('csv-upload').click()">อัปโหลด CSV</button>
+    <button class="btn btn-success" onclick="exportCSV()">ส่งออก Excel</button>
+    <button class="btn" onclick="window.print()">พิมพ์</button>
     
-    <a href="payroll_settings.html" class="btn btn-purple" style="text-decoration:none">⚙️ ตั้งค่าระบบ</a>
-    <button class="btn btn-danger" onclick="resetAll()">🔄 รีเซตข้อมูล</button>
+    <a href="payroll_settings.html" class="btn btn-purple" style="text-decoration:none">ตั้งค่าระบบ</a>
   </div>
 </div>
 
@@ -353,9 +529,9 @@ td:first-child, td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: 
 <div class="main" id="main"></div>
 <!-- Calendar Modal -->
 <div class="modal-overlay" id="calendar-modal" onclick="if(event.target===this)closeCalendarModal()">
-  <div class="modal-content" style="max-width: 500px;">
+  <div class="modal-content" style="max-width: 650px;">
     <div class="modal-header">
-      <h2 style="display:flex; align-items:center; gap:8px;">🗓️ จัดการวันหยุด (<span id="cal-emp-name"></span>) <span id="cal-month" style="font-size:0.85rem; color:var(--blue); font-weight:normal; background:#eff6ff; padding:2px 8px; border-radius:12px; border:1px solid #bfdbfe;"></span></h2>
+      <h2 style="display:flex; align-items:center; gap:8px;">จัดการวันหยุด (<span id="cal-emp-name"></span>) <span id="cal-month" style="font-size:0.85rem; color:var(--blue); font-weight:normal; background:#eff6ff; padding:2px 8px; border-radius:12px; border:1px solid #bfdbfe;"></span></h2>
       <button class="modal-close" onclick="closeCalendarModal()">&times;</button>
     </div>
     <div class="modal-body">
@@ -371,9 +547,9 @@ td:first-child, td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: 
 
 <!-- Advance Modal -->
 <div class="modal-overlay" id="advance-modal" onclick="if(event.target===this)closeAdvanceModal()">
-  <div class="modal-content" style="max-width: 600px;">
+  <div class="modal-content" style="max-width: 850px;">
     <div class="modal-header">
-      <h2>💸 บันทึกเบิกเงิน (<span id="adv-emp-name"></span>)</h2>
+      <h2>บันทึกเบิกเงิน (<span id="adv-emp-name"></span>)</h2>
       <button class="modal-close" onclick="closeAdvanceModal()">&times;</button>
     </div>
     <div class="modal-body">
@@ -403,7 +579,7 @@ td:first-child, td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: 
           <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">หัวข้อ / หมายเหตุ</label>
           <input type="text" id="adv-note" class="setup-input" placeholder="เช่น เบิกค่ารถ...">
         </div>
-        <button class="btn btn-primary" onclick="addAdvance()">➕ เพิ่ม</button>
+        <button class="btn btn-primary btn-add-modal" onclick="addAdvance()">+ เพิ่ม</button>
       </div>
       
       <table class="settings-table">
@@ -428,9 +604,9 @@ td:first-child, td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: 
 
 <!-- Errand Modal -->
 <div class="modal-overlay" id="errand-modal" onclick="if(event.target===this)closeErrandModal()">
-  <div class="modal-content" style="max-width: 600px;">
+  <div class="modal-content" style="max-width: 850px;">
     <div class="modal-header">
-      <h2>🏃 บันทึกธุระ (<span id="err-emp-name"></span>)</h2>
+      <h2>บันทึกธุระ (<span id="err-emp-name"></span>)</h2>
       <button class="modal-close" onclick="closeErrandModal()">&times;</button>
     </div>
     <div class="modal-body">
@@ -464,7 +640,7 @@ td:first-child, td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: 
           <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:4px">หักเงิน (บ.) <span id="err-mins-lbl" style="font-size:0.7rem;color:var(--blue)"></span></label>
           <input type="number" id="err-amount" class="setup-input" placeholder="0">
         </div>
-        <button class="btn btn-primary" onclick="addErrand()">➕ บันทึก</button>
+        <button class="btn btn-primary btn-add-modal" onclick="addErrand()">+ บันทึก</button>
       </div>
       
       <table class="settings-table">
@@ -497,6 +673,84 @@ td:first-child, td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: 
 
 let CURRENT_MONTH = '2026-04';
 function getMonthKey() { return CURRENT_MONTH.replace('-', ''); }
+
+function changeMonth(newMonth) {
+  if (newMonth) {
+    window.location.href = window.location.pathname + '?month=' + newMonth;
+  }
+}
+
+let pickerCurrentYear = parseInt(CURRENT_MONTH.split('-')[0]) || 2026;
+
+function toggleMonthPicker() {
+  const picker = document.getElementById('custom-month-picker');
+  if (picker.style.display === 'none') {
+    pickerCurrentYear = parseInt(CURRENT_MONTH.split('-')[0]) || 2026;
+    document.getElementById('picker-year-display').innerText = pickerCurrentYear;
+    picker.style.display = 'block';
+    renderPickerMonths();
+  } else {
+    picker.style.display = 'none';
+  }
+}
+
+function changePickerYear(delta) {
+  pickerCurrentYear += delta;
+  document.getElementById('picker-year-display').innerText = pickerCurrentYear;
+  renderPickerMonths();
+}
+
+function renderPickerMonths() {
+  const grid = document.getElementById('picker-months-grid');
+  grid.innerHTML = '';
+  const monthsAbbr = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+  
+  const currentSelYear = parseInt(CURRENT_MONTH.split('-')[0]);
+  const currentSelMonth = parseInt(CURRENT_MONTH.split('-')[1]);
+
+  monthsAbbr.forEach((m, idx) => {
+    const monthNum = idx + 1;
+    const isSelected = (pickerCurrentYear === currentSelYear && monthNum === currentSelMonth);
+    
+    const btn = document.createElement('div');
+    btn.innerText = m;
+    btn.style.padding = '8px 4px';
+    btn.style.textAlign = 'center';
+    btn.style.borderRadius = '8px';
+    btn.style.cursor = 'pointer';
+    btn.style.fontSize = '0.95rem';
+    btn.style.fontWeight = '500';
+    btn.style.transition = 'all 0.2s';
+    
+    if (isSelected) {
+      btn.style.background = 'var(--blue)';
+      btn.style.color = '#fff';
+      btn.style.boxShadow = '0 2px 4px rgba(59,130,246,0.3)';
+    } else {
+      btn.style.background = '#f8fafc';
+      btn.style.color = 'var(--text)';
+      btn.onmouseover = () => { btn.style.background = '#eff6ff'; btn.style.color = 'var(--blue)'; };
+      btn.onmouseout = () => { btn.style.background = '#f8fafc'; btn.style.color = 'var(--text)'; };
+    }
+
+    btn.onclick = () => {
+      const formattedMonth = monthNum.toString().padStart(2, '0');
+      const newMonth = `${pickerCurrentYear}-${formattedMonth}`;
+      document.getElementById('custom-month-picker').style.display = 'none';
+      changeMonth(newMonth);
+    };
+
+    grid.appendChild(btn);
+  });
+}
+
+document.addEventListener('click', (e) => {
+  const wrapper = document.getElementById('month-picker-wrapper');
+  const picker = document.getElementById('custom-month-picker');
+  if (wrapper && picker && !wrapper.contains(e.target)) {
+    picker.style.display = 'none';
+  }
+});
 
 function getMonthName() {
   const m = parseInt(CURRENT_MONTH.split('-')[1]);
@@ -620,7 +874,12 @@ async function initApp() {
       DAYS_IN_MONTH = new Date(parseInt(CURRENT_MONTH.split('-')[0]), parseInt(CURRENT_MONTH.split('-')[1]), 0).getDate();
     }
     
-    document.getElementById('main').innerHTML = '<div style="text-align:center;padding:50px;font-size:1.2rem;color:var(--primary);">🔄 กำลังโหลดข้อมูลจาก Cloud Database...</div>';
+    const monthDisplay = document.getElementById('month-text-display');
+    if (monthDisplay) {
+        monthDisplay.innerText = getMonthName();
+    }
+    
+    document.getElementById('main').innerHTML = '<div style="text-align:center;padding:50px;font-size:1.2rem;color:var(--primary);">กำลังโหลดข้อมูลจาก Cloud Database...</div>';
     
     const [settingsRes, empRes, punchesRes, editsRes, advRes, errRes] = await Promise.all([
       supabase.from('system_settings').select('*').eq('id', 'main').maybeSingle(),
@@ -976,7 +1235,7 @@ function calculateAllData(skipRender = false) {
              const hStr = String(Math.floor(coutH)).padStart(2, '0');
              const mStr = String(Math.round((coutH % 1) * 60)).padStart(2, '0');
              note = (note ? note + ' ' : '') + `ร้านปิดก่อน ${hStr}:${mStr}`;
-             if (shopClosedAiConfidence) note += ' 🤖';
+             if (shopClosedAiConfidence) note += ' (AI)';
              r_hasShopClosedStatus = true;
           } else if (near17 && !nearOwnEnd) {
               // Checkout ใกล้ 17:00 → ถือว่าสลับกะ PT
@@ -1080,7 +1339,7 @@ function calculateAllData(skipRender = false) {
              const hStr = String(Math.floor(coutH)).padStart(2, '0');
              const mStr = String(Math.round((coutH % 1) * 60)).padStart(2, '0');
              note = (note ? note + ' ' : '') + `ร้านปิดก่อน ${hStr}:${mStr}`;
-             if (shopClosedAiConfidence) note += ' 🤖';
+             if (shopClosedAiConfidence) note += ' (AI)';
              r_hasShopClosedStatus = true;
           } else if (!nearPtEnd && ptShiftEnd && coutHNorm < ptShiftEnd) {
               const hoursWorked = Math.max(0, coutHNorm - effectiveCinH);
@@ -1206,16 +1465,7 @@ function calcEmpTotal(emp){
   let tAdvance = (ADVANCES[emp.id] || []).reduce((sum, a) => sum + (parseFloat(a.amount) || 0), 0);
   return {base:tBase,ot:tOt,deduct:tDeduct,advance:tAdvance,net:tBase+tOt-tDeduct-tAdvance};
 }
-function buildTfoot(emp){
-  const t=calcEmpTotal(emp);
-  let deductHtml = fmt(t.deduct);
-  if (t.advance > 0) {
-      deductHtml += `<br><span style="font-size:0.75rem;color:var(--yellow);font-weight:normal;">(เบิก: ${fmt(t.advance)})</span>`;
-  }
-  return `<tr class="tfoot-row"><td colspan="4" style="text-align:right">รวมสุทธิ</td>
-    <td class="td-base">${fmt(t.base)}</td><td class="td-ot">${fmt(t.ot)}</td>
-    <td class="td-deduct">${deductHtml}</td><td class="total-net">${fmt(t.net)}</td><td></td></tr>`;
-}
+
 
 function buildRow(emp,r,ri){
   const net=Math.round((r.base+r.ot-r.deduct)*100)/100;
@@ -1249,14 +1499,57 @@ function buildRow(emp,r,ri){
     checkboxHtml += `<label class="ot-label" style="font-size:0.75rem;margin-left:6px;padding:2px 6px;border-radius:4px;background:#f0fdf4;border:1px solid #dcfce7;color:#16a34a;display:inline-block"><input type="checkbox" class="ot-check" ${isChecked} onchange="toggleManualOt('${emp.id}',${ri},this,${r.possibleOt})"> คิด OT (${r.possibleOt}บ.)</label>`;
   }
   
-  function editNoteCell() {
-    return `<div class="editable" contenteditable="true" 
-      style="min-height:20px; outline:none; font-size:0.85rem; color:var(--blue); border-bottom:1px dashed #cbd5e1; display:inline-block; min-width:100px; text-align:left;"
-      onblur="noteEdit('${emp.id}',${ri},this)"
-      placeholder="พิมพ์โน้ต.."
-    >${r.adminNote || ''}</div>`;
+  function buildNoteCell() {
+    // --- System notes → badges ---
+    const rawNote = r.note || '';
+    let sysBadges = '';
+    if (rawNote) {
+      // แยก notes ที่อาจมีหลายอัน
+      const parts = rawNote.split(/(?=วันหยุด|ร้านปิด|ออกก่อน|ธุระ|ทำความสะอาด|รอใส่)/).filter(Boolean);
+      parts.forEach(part => {
+        const p = part.trim();
+        if (!p) return;
+        let cls = 'info';
+        if (p.includes('วันหยุด')) cls = 'off-day';
+        else if (p.includes('ร้านปิด')) cls = 'shop-closed';
+        else if (p.includes('ออกก่อน') || p.includes('รอใส่')) cls = 'warning';
+        else if (p.includes('ธุระ')) cls = 'errand';
+        sysBadges += `<span class="sys-note-badge ${cls}">${p}</span>`;
+      });
+    }
+
+    // --- OT Checkbox ---
+    let otHtml = '';
+    if (r.manualOt && r.possibleOt > 0 && !locked) {
+      const isChecked = r.ot > 0 ? 'checked' : '';
+      otHtml = `<label class="btn-ot-label"><input type="checkbox" class="ot-check" ${isChecked} onchange="toggleManualOt('${emp.id}',${ri},this,${r.possibleOt})" style="margin-right:3px;"> OT ${r.possibleOt}บ.</label>`;
+    }
+
+    // --- Shop Closed toggle button ---
+    let shopBtn = '';
+    if (rawNote && (rawNote.includes('ออกก่อน') || rawNote.includes('ร้านปิดก่อน')) && !locked) {
+      const active = r.isShopClosed ? 'active' : '';
+      shopBtn = `<button class="btn-shop-closed ${active}" onclick="toggleShopClosed(event,'${emp.id}','${r.date}',${r.isShopClosed})">${r.isShopClosed?'ยกเลิกร้านปิด':'ร้านปิดก่อน'}</button>`;
+    }
+
+    // --- Reset button ---
+    const resetBtn = (isModified && !locked)
+      ? `<button class="btn-reset-row" onclick="resetRow(event,'${emp.id}',${ri})">↩ คืนค่า</button>`
+      : '';
+
+    // --- Admin note input ---
+    const adminInput = locked
+      ? `<span style="font-size:0.8rem;color:var(--muted)">${r.adminNote||''}</span>`
+      : `<input class="admin-note-input" type="text" value="${(r.adminNote||'').replace(/"/g,'&quot;')}" placeholder="โน้ตแอดมิน..." onblur="noteEdit('${emp.id}',${ri},this)" onkeydown="if(event.key==='Enter')this.blur()">`;
+
+    return `
+      <div class="note-cell-inner">
+        ${ (sysBadges||otHtml||shopBtn) ? `<div class="note-actions">${sysBadges}${otHtml}${shopBtn}</div>` : '' }
+        <div class="admin-note-wrap">${adminInput}</div>
+        ${ resetBtn ? `<div class="note-actions">${resetBtn}</div>` : '' }
+      </div>`;
   }
-  
+
   return `<tr id="row-${emp.id}-${ri}">
     <td class="td-date">${r.date}</td>
     <td class="td-time">${editTimeCell('cin')}</td>
@@ -1266,15 +1559,7 @@ function buildRow(emp,r,ri){
     <td class="td-ot">${editCell('ot','td-ot')}</td>
     <td class="td-deduct">${editCell('deduct','td-deduct')}</td>
     <td class="td-net">${fmt(net)}</td>
-    <td class="note-cell">
-      <div style="font-size:0.78rem; color:var(--muted); margin-bottom:4px; display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
-        <span style="line-height:1.2;">${r.note||''}</span> ${checkboxHtml}
-        ${(r.note && (r.note.includes('ออกก่อน') || r.note.includes('ร้านปิดก่อน')) && !locked) ? 
-           `<button class="btn" style="font-size:0.65rem; padding:1px 6px; ${r.isShopClosed ? 'color:var(--yellow);border-color:var(--yellow);background:#fffbeb;' : ''}" onclick="toggleShopClosed(event, '${emp.id}', '${r.date}', ${r.isShopClosed})">🌙 ${r.isShopClosed?'ยกเลิกร้านปิด':'ร้านปิดก่อน'}</button>` : ''}
-      </div>
-      ${editNoteCell()}
-      ${isModified&&!locked?' <button class="btn btn-danger" style="font-size:0.65rem; padding:1px 6px; margin-top:4px;" onclick="resetRow(event,\''+emp.id+'\','+ri+')" >↩ Reset</button>':''}
-    </td>
+    <td class="note-cell">${buildNoteCell()}</td>
   </tr>`;
 }
 
@@ -1297,15 +1582,40 @@ function updateGrand(){
   document.getElementById('grand-total').textContent='฿'+fmt(gt);
 }
 
+/* อัปเดต chips ทั้งบน header และ summary row ในตาราง */
+function updateChipsUI(eid) {
+  const emp = data.find(x => x.id === eid);
+  if (!emp) return;
+  const hc = document.getElementById('hchips-'+eid);
+  if (hc) hc.innerHTML = buildHeaderChips(emp);
+  const tc = document.getElementById('chips-'+eid);
+  if (tc) tc.innerHTML = buildChips(emp);
+}
+
 function buildChips(emp){
   const t=calcEmpTotal(emp);
+  const advHtml = t.advance > 0
+    ? `<br><span style="font-size:0.7rem;color:var(--yellow);font-weight:500;">(เบิก ${fmt(t.advance)})</span>` : '';
   return `
-    <div class="chip chip-base">ฐาน ${fmt(t.base)}</div>
-    <div class="chip chip-ot">OT ${fmt(t.ot)}</div>
-    <div class="chip chip-deduct">หักสาย ${fmt(t.deduct)}</div>
-    <div class="chip chip-advance" style="${t.advance > 0 ? '' : 'opacity:0.3; background:#f8fafc; color:#94a3b8; border-color:transparent;'}">เบิก ${fmt(t.advance)}</div>
-    <div class="chip chip-total">รับสุทธิ ${fmt(t.net)}</div>
+    <td colspan="4" style="text-align:right;padding-right:16px;font-size:0.85rem;color:#334155;font-weight:700;background:#f8fafc;">รวมทั้งเดือน</td>
+    <td style="text-align:right;padding:10px 16px;font-weight:700;color:var(--blue);background:#eff6ff;font-size:0.9rem;">${fmt(t.base)}</td>
+    <td style="text-align:right;padding:10px 16px;font-weight:700;color:var(--green);background:#f0fdf4;font-size:0.9rem;">${fmt(t.ot)}</td>
+    <td style="text-align:right;padding:10px 16px;font-weight:700;color:var(--red);background:#fef2f2;font-size:0.9rem;">${fmt(t.deduct)}${advHtml}</td>
+    <td style="text-align:right;padding:10px 16px;font-weight:800;color:var(--purple);background:#f5f3ff;font-size:0.95rem;">${fmt(t.net)}</td>
+    <td style="background:#f8fafc;"></td>
   `;
+}
+
+function buildHeaderChips(emp){
+  const t = calcEmpTotal(emp);
+  const chips = [
+    { label: 'ฐาน',   val: fmt(t.base),    cls: 'hchip-base' },
+    { label: 'OT',     val: fmt(t.ot),      cls: 'hchip-ot'   },
+    { label: 'หัก',    val: fmt(t.deduct),  cls: 'hchip-deduct'},
+    { label: 'เบิก',   val: fmt(t.advance), cls: `hchip-advance${t.advance > 0 ? '' : ' dim'}` },
+    { label: 'คงเหลือ', val: fmt(t.net),     cls: 'hchip-net'  },
+  ];
+  return chips.map(c => `<div class="hchip ${c.cls}"><span class="hchip-label">${c.label}</span><span class="hchip-val">${c.val}</span></div>`).join('');
 }
 
 function renderAll(){
@@ -1314,50 +1624,83 @@ function renderAll(){
   data.forEach(emp=>{
     const card=document.createElement('div');
     card.className='emp-card';
-    card.innerHTML=`<div class="emp-header" onclick="toggle('${emp.id}')">
-      <div class="emp-avatar">${EMP_NAMES[emp.id]?EMP_NAMES[emp.id].substring(0,2).toUpperCase():emp.id}</div>
-      <div class="emp-info">
-        <div class="emp-name">#${emp.id} ${emp.name}</div>
-        <div class="emp-meta">${emp.rate} · ${emp.rows.length} วัน</div>
+    card.id='card-'+emp.id;
+    const calBtn = emp.type === 'รายเดือน'
+      ? `<button class="btn-action btn-cal" onclick="openCalendarModal(event,'${emp.id}')">วันหยุด</button>` : `<div></div>`;
+    card.innerHTML=`
+      <div class="emp-header" onclick="toggle('${emp.id}')">
+        <div class="emp-avatar">${EMP_NAMES[emp.id]?EMP_NAMES[emp.id].substring(0,2).toUpperCase():emp.id}</div>
+        <div class="emp-info">
+          <div class="emp-name">#${emp.id} ${emp.name}</div>
+          <div class="emp-meta">${emp.rate} · ${emp.rows.length} วัน</div>
+        </div>
+        <div class="emp-header-actions" onclick="event.stopPropagation()">
+          ${calBtn}
+          <button class="btn-action btn-adv" onclick="openAdvanceModal(event,'${emp.id}')">เบิกเงิน</button>
+          <button class="btn-action btn-err" onclick="openErrandModal(event,'${emp.id}')">ธุระ</button>
+        </div>
+        <div class="emp-chips" id="hchips-${emp.id}">${buildHeaderChips(emp)}</div>
+        <div class="emp-toggle" id="toggle-${emp.id}">▼</div>
       </div>
-      <div class="emp-actions" onclick="event.stopPropagation()">
-        ${emp.type === 'รายเดือน' ? `<button class="btn-action btn-cal" onclick="openCalendarModal(event,'${emp.id}')">🗓️ จัดการวันหยุดพักผ่อน</button>` : '<div></div>'}
-        <button class="btn-action btn-adv" onclick="openAdvanceModal(event,'${emp.id}')">💸 เบิกเงิน</button>
-        <button class="btn-action btn-err" onclick="openErrandModal(event,'${emp.id}')">🏃 ธุระ</button>
-      </div>
-      <div class="emp-chips" id="chips-${emp.id}">${buildChips(emp)}</div>
-      <div class="emp-toggle" id="toggle-${emp.id}">▼</div>
-    </div>
-    <div class="emp-body" id="body-${emp.id}">
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr>
-            <th style="text-align:left">วันที่</th><th style="text-align:left">เข้า</th><th style="text-align:left">ออก</th><th style="text-align:left">สาย(น.)</th>
-            <th>ฐาน</th><th>OT</th><th>หัก</th><th>รวม</th>
-            <th style="text-align:left;min-width:200px">หมายเหตุระบบ / แอดมิน</th>
-          </tr></thead>
-          <tbody id="tbody-${emp.id}">
-            ${emp.rows.map((r,i)=>buildRow(emp,r,i)).join('')}
-          </tbody>
-          <tfoot id="tfoot-${emp.id}">${buildTfoot(emp)}</tfoot>
-        </table>
-      </div>
-    </div>`;
+      <div class="emp-body" id="body-${emp.id}">
+        <div class="tbl-wrap">
+          <table>
+            <colgroup>
+              <col style="width: 10%;">
+              <col style="width: 7%;">
+              <col style="width: 7%;">
+              <col style="width: 7%;">
+              <col style="width: 9%;">
+              <col style="width: 9%;">
+              <col style="width: 9%;">
+              <col style="width: 10%;">
+              <col style="width: 32%;">
+            </colgroup>
+            <thead><tr>
+              <th>วันที่</th><th>เข้า</th><th>ออก</th><th>สาย(น.)</th>
+              <th>ฐาน</th><th>OT</th><th>หัก</th><th>รวม</th>
+              <th style="text-align:right">หมายเหตุระบบ / แอดมิน</th>
+            </tr></thead>
+            <tbody id="tbody-${emp.id}">
+              ${emp.rows.map((r,i)=>buildRow(emp,r,i)).join('')}
+            </tbody>
+            <tfoot>
+              <tr id="chips-${emp.id}" class="chips-row">${buildChips(emp)}</tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>`;
     m.appendChild(card);
   });
   buildSummary();
 }
 
 function toggle(eid){
-  const body=document.getElementById('body-'+eid);
-  const tog=document.getElementById('toggle-'+eid);
-  const card=body.closest('.emp-card');
-  body.classList.toggle('open');
-  if(card) card.classList.toggle('selected');
-  tog.style.transform=body.classList.contains('open')?'rotate(180deg)':'';
+  const body = document.getElementById('body-'+eid);
+  const tog  = document.getElementById('toggle-'+eid);
+  const card = document.getElementById('card-'+eid);
+  if (!body) return;
+  const isOpen = body.classList.contains('open');
+  if (isOpen) {
+    body.classList.remove('open');
+    if (card) card.classList.remove('selected');
+    if (tog)  tog.style.transform = '';
+  } else {
+    body.classList.add('open');
+    if (card) card.classList.add('selected');
+    if (tog)  tog.style.transform = 'rotate(180deg)';
+  }
 }
-function expandAll(){document.querySelectorAll('.emp-body').forEach(b=>b.classList.add('open'));document.querySelectorAll('.emp-toggle').forEach(t=>t.style.transform='rotate(180deg)');}
-function collapseAll(){document.querySelectorAll('.emp-body').forEach(b=>b.classList.remove('open'));document.querySelectorAll('.emp-toggle').forEach(t=>t.style.transform='');}
+function expandAll(){
+  document.querySelectorAll('.emp-body').forEach(b=>b.classList.add('open'));
+  document.querySelectorAll('.emp-card').forEach(c=>c.classList.add('selected'));
+  document.querySelectorAll('.emp-toggle').forEach(t=>t.style.transform='rotate(180deg)');
+}
+function collapseAll(){
+  document.querySelectorAll('.emp-body').forEach(b=>b.classList.remove('open'));
+  document.querySelectorAll('.emp-card').forEach(c=>c.classList.remove('selected'));
+  document.querySelectorAll('.emp-toggle').forEach(t=>t.style.transform='');
+}
 
 function toggleManualOt(eid, ri, el, possibleOt) {
   const row = document.getElementById('row-'+eid+'-'+ri);
@@ -1558,7 +1901,7 @@ function addAdvance() {
   calculateAllData(true);
   const empUpdated = data.find(x => x.id === currentAdvEid);
   if (empUpdated) {
-    document.getElementById('chips-'+currentAdvEid).innerHTML = buildChips(empUpdated);
+    updateChipsUI(currentAdvEid);
     document.getElementById('tfoot-'+currentAdvEid).innerHTML = buildTfoot(empUpdated);
   }
   buildSummary(); updateGrand();
@@ -1580,7 +1923,7 @@ function deleteAdvance(idx) {
     calculateAllData(true);
     const empUpdated = data.find(x => x.id === currentAdvEid);
     if (empUpdated) {
-      document.getElementById('chips-'+currentAdvEid).innerHTML = buildChips(empUpdated);
+      updateChipsUI(currentAdvEid);
       document.getElementById('tfoot-'+currentAdvEid).innerHTML = buildTfoot(empUpdated);
     }
     buildSummary(); updateGrand();
@@ -1711,7 +2054,7 @@ function addErrand() {
   calculateAllData(true);
   const empUpdated = data.find(x => x.id === currentErrEid);
   if (empUpdated) {
-    document.getElementById('chips-'+currentErrEid).innerHTML = buildChips(empUpdated);
+    updateChipsUI(currentErrEid);
     document.getElementById('tfoot-'+currentErrEid).innerHTML = buildTfoot(empUpdated);
     const tbody = document.getElementById('tbody-'+currentErrEid);
     if(tbody) {
@@ -1738,7 +2081,7 @@ function deleteErrand(idx) {
     calculateAllData(true);
     const empUpdated = data.find(x => x.id === currentErrEid);
     if (empUpdated) {
-      document.getElementById('chips-'+currentErrEid).innerHTML = buildChips(empUpdated);
+      updateChipsUI(currentErrEid);
       document.getElementById('tfoot-'+currentErrEid).innerHTML = buildTfoot(empUpdated);
       const tbody = document.getElementById('tbody-'+currentErrEid);
       if(tbody) tbody.innerHTML = empUpdated.rows.map((r,i)=>buildRow(empUpdated,r,i)).join('');
@@ -1778,7 +2121,7 @@ function timeEdit(eid, ri, field, el){
   rows[ri].outerHTML = buildRow(emp, r, ri);
   
   document.getElementById('tfoot-'+eid).innerHTML=buildTfoot(emp);
-  document.getElementById('chips-'+eid).innerHTML=buildChips(emp);
+  updateChipsUI(eid);
   buildSummary(); updateGrand();
   showToast('อัปเดตเวลา ' + r.date);
 }
@@ -1805,7 +2148,7 @@ function cellEdit(eid, ri, field, el){
   rows[ri].outerHTML = buildRow(emp, r, ri);
   
   document.getElementById('tfoot-'+eid).innerHTML=buildTfoot(emp);
-  document.getElementById('chips-'+eid).innerHTML=buildChips(emp);
+  updateChipsUI(eid);
   buildSummary(); updateGrand();
   showToast('แก้ไข ' + r.date + ' ' + field);
 }
@@ -1813,7 +2156,8 @@ function cellEdit(eid, ri, field, el){
 function noteEdit(eid, ri, el){
   const emp = data.find(e=>e.id===eid);
   const r = emp.rows[ri];
-  const raw = el.textContent.trim();
+  // รองรับทั้ง input.value และ contenteditable.textContent
+  const raw = (el.tagName === 'INPUT' ? el.value : el.textContent).trim();
   r.adminNote = raw;
   
   const key = eid + '_' + r.date;
@@ -1841,7 +2185,7 @@ function resetRow(e,eid,ri){
   rows[ri].outerHTML = buildRow(emp, r, ri);
   
   document.getElementById('tfoot-'+eid).innerHTML=buildTfoot(emp);
-  document.getElementById('chips-'+eid).innerHTML=buildChips(emp);
+  updateChipsUI(eid);
   buildSummary(); updateGrand();
   
   showToast('รีเซตค่า ' + r.date);
@@ -1873,26 +2217,15 @@ function toggleShopClosed(e, eid, dateStr, currentVal) {
       if (rows[ri]) rows[ri].outerHTML = buildRow(emp, r, ri);
   }
   
-  const tfoot = document.getElementById('tfoot-'+eid);
-  if (tfoot) tfoot.innerHTML=buildTfoot(emp);
-  
-  const chips = document.getElementById('chips-'+eid);
-  if (chips) chips.innerHTML=buildChips(emp);
+  updateChipsUI(eid);
   
   buildSummary(); updateGrand();
   showToast(r.isShopClosed ? 'ทำเครื่องหมายร้านปิดก่อน' : 'ยกเลิกร้านปิดก่อน');
 }
 
-function resetAll(){
-  if(!confirm('ลบการแก้ไขตารางทั้งหมดกลับเป็นค่าเริ่มต้นไหม?'))return;
-  EDITS = {};
-  saveEdits();
-  calculateAllData();
-}
-
 function showToast(msg){
   const t=document.getElementById('toast');
-  t.textContent='✅ '+msg; t.classList.add('show');
+  t.textContent=''+msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2500);
 }
 
@@ -2009,177 +2342,6 @@ function handleCSVUpload(event) {
     r.readAsText(file, encoding);
   };
   tryLoad('UTF-8');
-  event.target.value = '';
-}
-
-// ── Backup Feature ────────────────────────────────
-function exportBackup() {
-  const backupData = {
-    month: CURRENT_MONTH,
-    rawPunches: RAW_PUNCHES,
-    edits: EDITS,
-    advances: ADVANCES,
-    errands: ERRANDS,
-    settings: {
-      shift: SHIFT,
-      deptRules: DEPT_RULES,
-      globalRules: GLOBAL_RULES
-    },
-    exportedAt: new Date().toISOString()
-  };
-  
-  const jsonStr = JSON.stringify(backupData, null, 2);
-  const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  const now = new Date();
-  const ts = now.getFullYear() + 
-             String(now.getMonth() + 1).padStart(2, '0') + 
-             String(now.getDate()).padStart(2, '0') + 
-             String(now.getHours()).padStart(2, '0') + 
-             String(now.getMinutes()).padStart(2, '0');
-  a.download = `payroll_backup_${ts}.json`;
-  a.click();
-}
-
-function handleBackupUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const r = new FileReader();
-  r.onload = async (e) => {
-    try {
-      const parsed = JSON.parse(e.target.result);
-      if (!parsed || !parsed.rawPunches || !parsed.settings) {
-        showToast("ไฟล์ Backup ไม่ถูกต้อง หรือไม่ใช่ไฟล์ Backup ของระบบนี้");
-        return;
-      }
-      if (!confirm(`คุณต้องการ Migrate Backup เดือน ${parsed.month || CURRENT_MONTH} ขึ้น Supabase ใช่หรือไม่?\nข้อมูลเวลาบนคลาวด์ในเดือนนี้จะถูกเขียนทับด้วย Backup ทันที`)) return;
-
-      const uploadMonth = parsed.month || CURRENT_MONTH;
-      document.getElementById('main').innerHTML = '<div style="text-align:center;padding:50px;font-size:1.2rem;color:var(--primary);">⏳ กำลังนำเข้าข้อมูลขึ้น Supabase... กรุณารอสักครู่</div>';
-
-      // 1. Upload Settings & Employees First
-      if (parsed.settings.savedRulesV1) {
-        try {
-          const rules = typeof parsed.settings.savedRulesV1 === 'string' ? JSON.parse(parsed.settings.savedRulesV1) : parsed.settings.savedRulesV1;
-          
-          if (rules.shiftProfiles) {
-            const empPayload = Object.keys(rules.shiftProfiles).map(eid => {
-                const e = rules.shiftProfiles[eid];
-                return {
-                    id: eid,
-                    name: e.name,
-                    shift_id: e.shiftId,
-                    type: e.t,
-                    daily_rate: e.d || 0,
-                    monthly_rate: e.mo || 0,
-                    hours_per_day: e.hrs || 8,
-                    ot_type: e.otType || 'none',
-                    late_type: e.lateType || 'general',
-                    dept: e.dept || 'other'
-                };
-            });
-            const { error: empErr } = await supabase.from('employees').upsert(empPayload);
-            if (empErr) console.error("Employee Upsert Error:", empErr);
-          }
-          
-          if (rules.globalRules || rules.shiftTemplates || rules.otDepartmentRules) {
-            const settingsPayload = {
-                id: 'main',
-                departments: rules.departments || [],
-                shift_templates: rules.shiftTemplates || {},
-                ot_rules: rules.otDepartmentRules || {},
-                global_rules: rules.globalRules || {}
-            };
-            const { error: setErr } = await supabase.from('system_settings').upsert(settingsPayload);
-            if (setErr) console.error("Settings Upsert Error:", setErr);
-          }
-        } catch(e) {
-          console.error("Failed to migrate settings", e);
-        }
-      }
-
-      // 2. Prepare Raw Punches
-      const tpPayload = [];
-      if (parsed.rawPunches) {
-        for (const eid in parsed.rawPunches) {
-          if (!EMP_NAMES[eid]) continue; // Skip employees that don't exist in DB to prevent foreign key errors
-          parsed.rawPunches[eid].forEach(r => {
-            const actualMonth = r.date.substring(0, 7); // Use actual month of punch (e.g., '2026-03' or '2026-04')
-            tpPayload.push({ employee_id: eid, month: actualMonth, punch_date: r.date, clock_in: r.cin, clock_out: r.cout, late_minutes: Number(r.lateM||0) });
-          });
-        }
-      }
-      
-      // 3. Prepare Edits
-      const edPayload = [];
-      if (parsed.edits) {
-        for (const key in parsed.edits) {
-          const [eid, ...dateParts] = key.split('_');
-          if (!EMP_NAMES[eid]) continue;
-          const actualMonth = dateParts.join('_').substring(0, 7);
-          edPayload.push({ employee_id: eid, month: actualMonth, edit_date: dateParts.join('_'), edit_data: parsed.edits[key] });
-        }
-      }
-
-      // 4. Prepare Advances
-      const advPayload = [];
-      if (parsed.advances) {
-        for (const eid in parsed.advances) {
-          if (!EMP_NAMES[eid]) continue;
-          parsed.advances[eid].forEach(a => {
-            const actualMonth = a.date.substring(0, 7);
-            advPayload.push({ employee_id: eid, month: actualMonth, advance_date: a.date, amount: Number(a.amount||0), note: a.note||'' });
-          });
-        }
-      }
-
-      // 5. Prepare Errands
-      const errPayload = [];
-      if (parsed.errands) {
-        for (const eid in parsed.errands) {
-          if (!EMP_NAMES[eid]) continue;
-          parsed.errands[eid].forEach(err => {
-            const actualMonth = err.date.substring(0, 7);
-            errPayload.push({ employee_id: eid, month: actualMonth, errand_date: err.date, start_time: err.start, end_time: err.end, minutes: Number(err.mins||0), amount: Number(err.amount||0) });
-          });
-        }
-      }
-
-      // Helper function is now global: upsertInChunks()
-
-      // 6. Upload Time Data to Supabase
-      showToast(`⏫ กำลังอัปโหลดข้อมูลสแกนนิ้ว ${tpPayload.length} แถว...`);
-      if (tpPayload.length > 0) await upsertInChunks('time_punches', tpPayload, 'employee_id, punch_date');
-      showToast(`⏫ กำลังอัปโหลด Manual Edits ${edPayload.length} แถว...`);
-      if (edPayload.length > 0) await upsertInChunks('manual_edits', edPayload, 'employee_id, edit_date');
-      
-      if (advPayload.length > 0) {
-        showToast(`⏫ กำลังอัปโหลด Advances ${advPayload.length} รายการ...`);
-        await supabase.from('advances').delete().eq('month', uploadMonth);
-        await upsertInChunks('advances', advPayload, null);
-      }
-      if (errPayload.length > 0) {
-        showToast(`⏫ กำลังอัปโหลด Errands ${errPayload.length} รายการ...`);
-        await supabase.from('errands').delete().eq('month', uploadMonth);
-        await upsertInChunks('errands', errPayload, null);
-      }
-      showToast('Migrate Backup สำเร็จ!');
-      
-      // Redirect to the uploaded month to reload data
-      setTimeout(() => {
-        const u = new URL(window.location);
-        u.searchParams.set('month', uploadMonth);
-        window.location.href = u.toString();
-      }, 1500);
-
-    } catch(err) {
-      alert("เกิดข้อผิดพลาดในการ Migrate: " + err.message);
-      console.error(err);
-      initApp(); // reload original data on error
-    }
-  };
-  r.readAsText(file);
   event.target.value = '';
 }
 

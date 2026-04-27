@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>⚙️ ตั้งค่าระบบเงินเดือน</title>
+<title>ตั้งค่าระบบเงินเดือน</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -86,14 +86,12 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
 <body>
 <div class="header">
   <div>
-    <h1>⚙️ ตั้งค่าระบบเงินเดือน</h1>
-    <div class="subtitle">ปรับกฎ แล้ว Export เป็น JSON เพื่อส่งให้ AI เรียนรู้</div>
-  </div>
+    <h1>ตั้งค่าระบบเงินเดือน</h1>
+      </div>
   <div class="btn-group">
     <button class="btn btn-back" onclick="location.href='payroll_app.html'">← กลับหน้าหลัก</button>
-    <button class="btn btn-purple" onclick="exportSkillMD()">📄 Export skill.md</button>
-    <button class="btn btn-primary" onclick="saveToSupabase()">☁️ บันทึกขึ้น Cloud</button>
-    <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);margin-left:8px;" onclick="signOut()">🚪 ออกจากระบบ</button>
+        <button class="btn btn-primary" onclick="saveToSupabase()">บันทึก</button>
+    <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);margin-left:8px;" onclick="signOut()">ออกจากระบบ</button>
   </div>
 </div>
 
@@ -102,9 +100,9 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
 
   <!-- TAB 1: GLOBAL -->
   <div id="tab-global" class="section active">
-    <div class="section-title">🌐 ตั้งค่าทั่วไป</div>
+    <div class="section-title">ตั้งค่าทั่วไป</div>
     <div class="card">
-      <div class="card-title">📅 ข้อมูลเดือน / ปี</div>
+      <div class="card-title">ข้อมูลเดือน / ปี</div>
       <div class="grid">
         <div class="field"><label>จำนวนวันในเดือน</label><input type="number" id="g_days" value="30" min="28" max="31"></div>
         <div class="field"><label>เดือน-ปี (ป้ายชื่อ)</label><input type="text" id="g_month_label" value="เมษายน 2026"></div>
@@ -114,7 +112,7 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
       </div>
     </div>
     <div class="card">
-      <div class="card-title">❌ กฎลืมสแกน (Missing Punch)</div>
+      <div class="card-title">กฎลืมสแกน (Missing Punch)</div>
       <div class="two-col">
         <div class="field"><label>ลืมสแกนเข้า → ค่าแรงวันนั้น</label>
           <select id="g_miss_in"><option value="0" selected>0 บาท (ไม่ได้ค่าแรง)</option><option value="half">หักครึ่งวัน</option></select></div>
@@ -123,11 +121,11 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
       </div>
     </div>
     <div class="card">
-      <div class="card-title">🌙 กะข้ามคืน (Overnight)</div>
-      <div class="info-box">✅ เปิดใช้งานอัตโนมัติ: ถ้า <strong>เวลาออก &lt; เวลาเข้า</strong> → ระบบบวก +24 ชม. ให้อัตโนมัติ<br>ตัวอย่าง: เข้า 22:00 ออก 01:00 → คำนวณว่าออก 25:00 (3 ชม.)</div>
+      <div class="card-title">กะข้ามคืน (Overnight)</div>
+      <div class="info-box">เปิดใช้งานอัตโนมัติ: ถ้า <strong>เวลาออก &lt; เวลาเข้า</strong> → ระบบบวก +24 ชม. ให้อัตโนมัติ<br>ตัวอย่าง: เข้า 22:00 ออก 01:00 → คำนวณว่าออก 25:00 (3 ชม.)</div>
     </div>
     <div class="card">
-      <div class="card-title">📡 Column Header CSV</div>
+      <div class="card-title">Column Header CSV</div>
       <div class="grid">
         <div class="field"><label>Col หมายเลขพนักงาน</label><input type="text" id="g_col_eid" value="หมายเลขพนักงาน, No."></div>
         <div class="field"><label>Col วันที่</label><input type="text" id="g_col_date" value="วันที่, Date"></div>
@@ -139,9 +137,9 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
 
   <!-- TAB 2: SHIFT TEMPLATES -->
   <div id="tab-shifts" class="section">
-    <div class="section-title">⏰ แม่แบบกะ (Shift Templates)</div>
+    <div class="section-title">แม่แบบกะ (Shift Templates)</div>
     <div class="card">
-      <div class="info-box" style="margin-bottom:14px">แต่ละกะเป็น "แม่แบบกลาง" — พนักงานในหน้า 👥 จะอ้างอิง Shift ID แทนการผูกเวลากับรายคน</div>
+      <div class="info-box" style="margin-bottom:14px">แต่ละกะเป็น "แม่แบบกลาง" — พนักงานในหน้า จะอ้างอิง Shift ID แทนการผูกเวลากับรายคน</div>
       <div class="tbl-wrap">
         <table class="data-table">
           <thead><tr><th>Shift ID</th><th>ชื่อกะ</th><th>เข้า (ชม.)</th><th>ออก (ชม.)</th><th>ชม./วัน</th><th>กลุ่ม OT</th><th>กลุ่มสาย</th><th></th></tr></thead>
@@ -154,12 +152,12 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
 
   <!-- TAB 3: OT & LATE RULES -->
   <div id="tab-rules" class="section">
-    <div class="section-title">⚖️ กฎ OT & หักสาย</div>
+    <div class="section-title">กฎ OT & หักสาย</div>
 
     <!-- ส่วนของ OT -->
-    <h3 style="margin-top:0; margin-bottom:16px; color:var(--blue); display:flex; align-items:center; gap:8px; font-size:1.05rem; border-left:4px solid var(--blue); padding-left:10px;">💵 กฎการคำนวณ OT (ล่วงเวลา)</h3>
+    <h3 style="margin-top:0; margin-bottom:16px; color:var(--blue); display:flex; align-items:center; gap:8px; font-size:1.05rem; border-left:4px solid var(--blue); padding-left:10px;">กฎการคำนวณ OT (ล่วงเวลา)</h3>
     <div class="card">
-      <div class="card-title">🌅 กะเช้า (Morning OT) — หลังเลิกงาน</div>
+      <div class="card-title">กะเช้า (Morning OT) — หลังเลิกงาน</div>
       <div class="three-col">
         <div class="field"><label>เริ่มคิด OT หลังจาก (น.)</label><input type="text" id="ot_morning_start" value="21:00"></div>
         <div class="field"><label>ต้องออกหลัง (นาที จึงจะได้)</label><input type="number" id="ot_morning_grace" value="10"></div>
@@ -169,7 +167,7 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
     </div>
 
     <div class="card">
-      <div class="card-title">🍳 ครัว (Kitchen OT) — ก่อนเข้างาน</div>
+      <div class="card-title">ครัว (Kitchen OT) — ก่อนเข้างาน</div>
       <div class="two-col">
         <div class="field"><label>เวลาเข้างาน (น.)</label><input type="text" id="ot_kitchen_shift" value="10:00"></div>
         <div class="field"><label>ได้ OT ถ้าเข้าก่อน (น.)</label><input type="text" id="ot_kitchen_cutoff" value="09:00"></div>
@@ -182,7 +180,7 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
     </div>
 
     <div class="card">
-      <div class="card-title">⚽ สนามบอล (Football OT) — ก่อนเข้างาน</div>
+      <div class="card-title">สนามบอล (Football OT) — ก่อนเข้างาน</div>
       <div class="three-col">
         <div class="field"><label>เวลาเข้างาน (น.)</label><input type="text" id="ot_football_shift" value="14:00"></div>
         <div class="field"><label>ได้ OT ถ้าเข้าก่อน (น.)</label><input type="text" id="ot_football_cutoff" value="13:00"></div>
@@ -192,7 +190,7 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
     </div>
 
     <div class="card">
-      <div class="card-title">🔒 Looknum OT</div>
+      <div class="card-title">Looknum OT</div>
       <div class="two-col">
         <div class="field"><label>คิด OT หลังเวลา (น.)</label><input type="text" id="ot_looknum_start" value="20:00"></div>
         <div class="field"><label>ต้องออกหลัง (น.) ถึงจะได้</label><input type="text" id="ot_looknum_grace" value="21:10"></div>
@@ -200,15 +198,15 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
     </div>
 
     <div class="card">
-      <div class="card-title">✅ การอนุมัติ OT</div>
-      <div class="info-box warn">⚠️ OT ทุกยอดต้องได้รับการ <strong>Approve</strong> จากแอดมินก่อนบวกเข้าเงินเดือน เพื่อป้องกันพนักงานรูดเกิน</div>
+      <div class="card-title">การอนุมัติ OT</div>
+      <div class="info-box warn">OT ทุกยอดต้องได้รับการ <strong>Approve</strong> จากแอดมินก่อนบวกเข้าเงินเดือน เพื่อป้องกันพนักงานรูดเกิน</div>
     </div>
 
     <!-- ส่วนของการหักสาย -->
-    <h3 style="margin-top:32px; margin-bottom:16px; color:var(--red); display:flex; align-items:center; gap:8px; font-size:1.05rem; border-left:4px solid var(--red); padding-left:10px;">⏰ กฎการหักสาย</h3>
+    <h3 style="margin-top:32px; margin-bottom:16px; color:var(--red); display:flex; align-items:center; gap:8px; font-size:1.05rem; border-left:4px solid var(--red); padding-left:10px;">กฎการหักสาย</h3>
 
     <div class="card">
-      <div class="card-title"><span class="tag tag-kitchen">🍳 ครัว</span> &nbsp;Kitchen Exact Per-Minute Late</div>
+      <div class="card-title"><span class="tag tag-kitchen">ครัว</span> &nbsp;Kitchen Exact Per-Minute Late</div>
       <div class="two-col">
         <div class="field"><label>ผ่อนผัน (นาที ไม่หัก)</label><input type="number" id="late_kitchen_grace" value="10"></div>
         <div class="field"><label>ฐานเวลาคิดเรท (ชม.)</label><input type="number" id="late_kitchen_base_hrs" value="12"></div>
@@ -220,7 +218,7 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="tag" style="background:#0984e3;color:white">🏢 ออฟฟิศ</span> &nbsp;Office Exact Per-Minute (Looknum, Chompoo)</div>
+      <div class="card-title"><span class="tag" style="background:#0984e3;color:white">ออฟฟิศ</span> &nbsp;Office Exact Per-Minute (Looknum, Chompoo)</div>
       <div class="two-col">
         <div class="field"><label>ผ่อนผัน (นาที ไม่หัก)</label><input type="number" id="late_office_grace" value="10"></div>
         <div class="field"><label>ฐานเวลาคิดเรท (ชม.)</label><input type="number" id="late_office_base_hrs" value="10"></div>
@@ -232,7 +230,7 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="tag tag-football">⚽ สนามบอล</span> &nbsp;Football Late — Special Mode</div>
+      <div class="card-title"><span class="tag tag-football">สนามบอล</span> &nbsp;Football Late — Special Mode</div>
       <div class="grid">
         <div class="field"><label>เวลาเข้างาน (น.)</label><input type="text" id="late_fb_shift" value="14:00"></div>
         <div class="field"><label>ผ่อนผันปกติ (นาที)</label><input type="number" id="late_fb_grace" value="10"></div>
@@ -240,7 +238,7 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
         <div class="field"><label>ขนาดรอบ (นาที)</label><input type="number" id="late_fb_block_min" value="60"></div>
       </div>
       <div class="divider"></div>
-      <div style="font-size:.85rem;font-weight:600;color:var(--muted);margin-bottom:10px">🛡️ โหมดอนุโลมพิเศษ</div>
+      <div style="font-size:.85rem;font-weight:600;color:var(--muted);margin-bottom:10px">โหมดอนุโลมพิเศษ</div>
       <div class="two-col">
         <div class="field"><label>เข้าได้ถึง (น.) โดยไม่หัก</label><input type="text" id="late_fb_allow_until" value="15:00"></div>
         <div class="field"><label>ฐานย้อนนับค่าหัก (น.)</label><input type="text" id="late_fb_anchor" value="14:00"></div>
@@ -252,7 +250,7 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="tag tag-general">💳 ทั่วไปรายวัน</span> &nbsp;General Daily Late</div>
+      <div class="card-title"><span class="tag tag-general">ทั่วไปรายวัน</span> &nbsp;General Daily Late</div>
       <div class="three-col">
         <div class="field"><label>ผ่อนผัน (นาที)</label><input type="number" id="late_gen_grace" value="10"></div>
         <div class="field"><label>ปัดเศษ</label>
@@ -262,7 +260,7 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="tag tag-monthly">📅 รายเดือน</span> &nbsp;Monthly Late</div>
+      <div class="card-title"><span class="tag tag-monthly">รายเดือน</span> &nbsp;Monthly Late</div>
       <div class="two-col">
         <div class="field"><label>ผ่อนผัน (นาที)</label><input type="number" id="late_monthly_grace" value="10"></div>
         <div class="field"><label>ปัดเศษ</label>
@@ -272,7 +270,7 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
     </div>
 
     <div class="card">
-      <div class="card-title">🕐 พาร์ทไทม์ Late</div>
+      <div class="card-title">พาร์ทไทม์ Late</div>
       <div class="two-col">
         <div class="field"><label>ผ่อนผัน (นาที)</label><input type="number" id="late_pt_grace" value="10"></div>
         <div class="field"><label>ปัดเศษ</label>
@@ -283,9 +281,9 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
 
   <!-- TAB 4: DYNAMIC SHIFT -->
   <div id="tab-dynamic" class="section">
-    <div class="section-title">🔄 กฎสลับกะ / เปลี่ยนอัตรา</div>
+    <div class="section-title">กฎสลับกะ / เปลี่ยนอัตรา</div>
     <div class="card">
-      <div class="card-title">🔁 Dynamic Shift Detection</div>
+      <div class="card-title">Dynamic Shift Detection</div>
       <div class="two-col">
         <div class="field"><label>Candidate Shifts (เวลา คั่นด้วย ,)</label><input type="text" id="ds_candidates" value="10, 15, 17"></div>
         <div class="field"><label>กลุ่มที่ล็อกไม่สลับ (คั่นด้วย ,)</label><input type="text" id="ds_locked" value="kitchen, football, looknum"></div>
@@ -293,7 +291,7 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
       <div class="info-box">ระบบดักกะจากเวลาเข้าจริง เพื่อปรับสิทธิ์ OT อัตโนมัติ (ยกเว้นกลุ่มที่ล็อก)</div>
     </div>
     <div class="card">
-      <div class="card-title">⬇️ กฎลดอัตราเป็นพาร์ทไทม์ (Override)</div>
+      <div class="card-title">กฎลดอัตราเป็นพาร์ทไทม์ (Override)</div>
       <div class="grid">
         <div class="field"><label>เข้างาน >= เวลานี้ → เรท PT (น.)</label><input type="text" id="ds_late_in" value="16:30"></div>
         <div class="field"><label>ออกก่อนเวลานี้ → เรท PT (น.)</label><input type="text" id="ds_early_out" value="18:00"></div>
@@ -304,7 +302,7 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
     </div>
 
     <div class="card">
-      <div class="card-title">🕐 ออกก่อนเวลา (Early Checkout Detection)</div>
+      <div class="card-title">ออกก่อนเวลา (Early Checkout Detection)</div>
       <div class="grid">
         <div class="field"><label>Tolerance พนักงานรายวัน/เดือน (นาที)</label><input type="number" id="ec_fulltime_tol" value="30" min="0" max="120"></div>
         <div class="field"><label>Tolerance PT กะเย็น (นาที)</label><input type="number" id="ec_pt_tol" value="120" min="0" max="300"></div>
@@ -317,19 +315,19 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
     </div>
 
     <div class="card">
-      <div class="card-title">🤖 ร้านปิดก่อน (Shop Closed AI Detection)</div>
+      <div class="card-title">ร้านปิดก่อน (Shop Closed AI Detection)</div>
       <div class="grid">
         <div class="field"><label>พนักงานออกพร้อมกัน (ขั้นต่ำกี่คน)</label><input type="number" id="shop_ai_min_workers" value="2" min="1" max="10"></div>
         <div class="field"><label>ระยะห่างเวลาออก (≤ ชม. ถือว่ากลุ่มเดียวกัน)</label><input type="number" id="shop_ai_time_spread" value="1.5" step="0.5" min="0"></div>
         <div class="field"><label>ออกก่อนเวลาเลิกอย่างน้อย (≧ ชม.) AI ถึงทำแาน</label><input type="number" id="shop_ai_early_hrs" value="1.0" step="0.5" min="0"></div>
       </div>
       <div class="info-box">
-        <strong>Herd Detection:</strong> ถ้าระบบพบว่าคนกลุ่มเดียวกันเลิกงานไล่เลี่ยกันตามเกณฑ์นี้ จะเปิดโหมด "ร้านปิดก่อน" ให้อัตโนมัติ (ไม่หักแบบชั่วโมงจริง แต่จ่ายเต็มวัน) แอดมินสามารถเปิด/ปิดได้ด้วยปุ่ม 🌙 ท้ายโน้ต
+        <strong>Herd Detection:</strong> ถ้าระบบพบว่าคนกลุ่มเดียวกันเลิกงานไล่เลี่ยกันตามเกณฑ์นี้ จะเปิดโหมด "ร้านปิดก่อน" ให้อัตโนมัติ (ไม่หักแบบชั่วโมงจริง แต่จ่ายเต็มวัน) แอดมินสามารถเปิด/ปิดได้ด้วยปุ่ม ท้ายโน้ต
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title">☀️ Part-Time มาแทนกะเช้า (Morning Replacement)</div>
+      <div class="card-title">Part-Time มาแทนกะเช้า (Morning Replacement)</div>
       <div class="grid">
         <div class="field"><label>เข้าก่อน (น.) = ถือเป็นกะเช้า</label><input type="text" id="ds_pt_morning_cutoff" value="12:00"></div>
         <div class="field"><label>อัตราพิเศษ (บาท/วัน)</label><input type="number" id="ds_pt_morning_rate" value="350"></div>
@@ -341,7 +339,7 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
     </div>
 
     <div class="card">
-      <div class="card-title">🧹 กฎแม่บ้าน / ทำความสะอาด (Cleaner Special Rules)</div>
+      <div class="card-title">กฎแม่บ้าน / ทำความสะอาด (Cleaner Special Rules)</div>
       <div class="grid">
         <div class="field"><label>รหัสพนักงานที่ใช้กฎนี้ (คั่นด้วย ,)</label><input type="text" id="cl_ids" value="21"></div>
         <div class="field"><label>ค่าแรงวันอาทิตย์ (บาท/วัน)</label><input type="number" id="cl_sunday_rate" value="190"></div>
@@ -354,19 +352,19 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
 
   <!-- TAB 5: EMPLOYEES -->
   <div id="tab-employees" class="section">
-    <div class="section-title">👥 ข้อมูลพนักงาน</div>
+    <div class="section-title">ข้อมูลพนักงาน</div>
 
     <!-- DEPT MANAGER CARD -->
     <details class="card" style="margin-bottom:14px">
       <summary style="cursor:pointer;font-weight:700;font-size:.95rem;color:#0f172a;list-style:none;display:flex;align-items:center;justify-content:space-between">
-        <span>🏷️ จัดการแผนก</span>
+        <span>จัดการแผนก</span>
         <span style="font-size:.78rem;color:var(--muted);font-weight:400">คลิกเพื่อเปิด/ปิด ▾</span>
       </summary>
       <div style="margin-top:14px">
-        <div class="info-box" style="margin-bottom:12px">📌 แผนกใช้เพื่อ <strong>จัดกลุ่มและกรองข้อมูล</strong> เท่านั้น ไม่กระทบการคำนวณ — กฎคำนวณจริงอยู่ที่คอลัมน์ <strong>OT กลุ่ม</strong> และ <strong>สาย กลุ่ม</strong></div>
+        <div class="info-box" style="margin-bottom:12px">แผนกใช้เพื่อ <strong>จัดกลุ่มและกรองข้อมูล</strong> เท่านั้น ไม่กระทบการคำนวณ — กฎคำนวณจริงอยู่ที่คอลัมน์ <strong>OT กลุ่ม</strong> และ <strong>สาย กลุ่ม</strong></div>
         <div class="tbl-wrap">
           <table class="data-table">
-            <thead><tr><th style="width:130px">ID (ภายใน)</th><th>ชื่อแผนก (ใส่ emoji ได้ เช่น 🍳 ครัว)</th><th style="width:60px"></th></tr></thead>
+            <thead><tr><th style="width:130px">ID (ภายใน)</th><th>ชื่อแผนก (ใส่ emoji ได้ เช่น ครัว)</th><th style="width:60px"></th></tr></thead>
             <tbody id="dept-manager-list"></tbody>
           </table>
         </div>
@@ -379,7 +377,7 @@ table.data-table input,table.data-table select{padding:5px 8px;font-size:.82rem;
     <div class="card">
       <div class="tbl-wrap">
         <table class="data-table">
-          <thead><tr><th>#</th><th>ชื่อ</th><th>ประเภท</th><th>แผนก 🏷️</th><th>Shift ID</th><th>บาท/วัน</th><th>บาท/เดือน</th><th>ชม./วัน</th><th>OT กลุ่ม</th><th>สาย กลุ่ม</th><th></th></tr></thead>
+          <thead><tr><th>#</th><th>ชื่อ</th><th>ประเภท</th><th>แผนก </th><th>Shift ID</th><th>บาท/วัน</th><th>บาท/เดือน</th><th>ชม./วัน</th><th>OT กลุ่ม</th><th>สาย กลุ่ม</th><th></th></tr></thead>
           <tbody id="emp-list"></tbody>
         </table>
       </div>
