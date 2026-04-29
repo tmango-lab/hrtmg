@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "architecture.md",
+                "file": "skill.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "architecture"
+              "title": "skill"
             }
           }
         ]
@@ -185,19 +185,18 @@
   },
   "active": "56a03027156566c1",
   "lastOpenFiles": [
+    "architecture.md",
     "remove_export.js",
     "remove_all_emojis.js",
     "remove_emojis.js",
     "clean_ui.js",
     "migration_tasks.md",
-    "architecture.md",
     "Untitled.base",
     "skill.md",
     "test_e2e.js",
     "index.html",
     "debug_compare.html",
     "ori25042569.json",
-    "บัตรเวลาทั้งหมด_20260425134259_export.csv",
-    "25042569.json"
+    "บัตรเวลาทั้งหมด_20260425134259_export.csv"
   ]
 }
