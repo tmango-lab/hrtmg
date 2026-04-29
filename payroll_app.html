@@ -1848,6 +1848,7 @@ function renderAdvanceList() {
   document.getElementById('adv-max-amount').textContent = '฿' + fmt(Math.max(0, maxAllowed - t.advance));
   
   const advances = ADVANCES[currentAdvEid] || [];
+  advances.sort((a,b) => a.date.localeCompare(b.date));
   let html = '';
   advances.forEach((adv, idx) => {
     const dParts = adv.date.split('-');
@@ -1857,7 +1858,7 @@ function renderAdvanceList() {
       <td style="color:var(--muted);font-size:0.8rem">${adv.note}</td>
       <td style="text-align:right;color:var(--yellow);font-weight:600">฿${fmt(adv.amount)}</td>
       <td style="text-align:center">
-        <button class="btn btn-outline" style="padding:2px 6px;color:var(--red);border-color:var(--red);" onclick="deleteAdvance(${idx})">x</button>
+        <button class="btn btn-outline" style="width:24px;height:24px;padding:0;display:inline-flex;align-items:center;justify-content:center;color:var(--red);border-color:var(--red);border-radius:6px;line-height:1;font-size:14px;" onclick="deleteAdvance(${idx})">✕</button>
       </td>
     </tr>`;
   });
@@ -1895,6 +1896,7 @@ function addAdvance() {
   
   if (!ADVANCES[currentAdvEid]) ADVANCES[currentAdvEid] = [];
   ADVANCES[currentAdvEid].push({ date: date, amount, note: noteObj });
+  ADVANCES[currentAdvEid].sort((a,b) => a.date.localeCompare(b.date));
   saveAdvances();
   
   // Partial update — do NOT call calculateAllData() with renderAll to avoid collapsing accordions
@@ -1902,7 +1904,6 @@ function addAdvance() {
   const empUpdated = data.find(x => x.id === currentAdvEid);
   if (empUpdated) {
     updateChipsUI(currentAdvEid);
-    document.getElementById('tfoot-'+currentAdvEid).innerHTML = buildTfoot(empUpdated);
   }
   buildSummary(); updateGrand();
   
@@ -1924,7 +1925,6 @@ function deleteAdvance(idx) {
     const empUpdated = data.find(x => x.id === currentAdvEid);
     if (empUpdated) {
       updateChipsUI(currentAdvEid);
-      document.getElementById('tfoot-'+currentAdvEid).innerHTML = buildTfoot(empUpdated);
     }
     buildSummary(); updateGrand();
     
@@ -1968,6 +1968,7 @@ function closeErrandModal() {
 function renderErrandList() {
   if (!currentErrEid) return;
   const errands = ERRANDS[currentErrEid] || [];
+  errands.sort((a,b) => a.date.localeCompare(b.date));
   let html = '';
   errands.forEach((err, idx) => {
     const dParts = err.date.split('-');
@@ -1979,7 +1980,7 @@ function renderErrandList() {
       <td style="color:var(--muted);font-size:0.8rem">${sStr}-${eStr} (${err.mins} น.)</td>
       <td style="color:var(--red);font-weight:600;text-align:right;">฿${fmt(err.amount)}</td>
       <td style="text-align:center">
-        <button class="btn btn-outline" style="padding:2px 6px;color:var(--red);border-color:var(--red);" onclick="deleteErrand(${idx})">x</button>
+        <button class="btn btn-outline" style="width:24px;height:24px;padding:0;display:inline-flex;align-items:center;justify-content:center;color:var(--red);border-color:var(--red);border-radius:6px;line-height:1;font-size:14px;" onclick="deleteErrand(${idx})">✕</button>
       </td>
     </tr>`;
   });
@@ -2049,13 +2050,13 @@ function addErrand() {
   
   if (!ERRANDS[currentErrEid]) ERRANDS[currentErrEid] = [];
   ERRANDS[currentErrEid].push({ date: dateVal, start: startVal, end: endVal, mins, amount });
+  ERRANDS[currentErrEid].sort((a,b) => a.date.localeCompare(b.date));
   saveErrands();
   
   calculateAllData(true);
   const empUpdated = data.find(x => x.id === currentErrEid);
   if (empUpdated) {
     updateChipsUI(currentErrEid);
-    document.getElementById('tfoot-'+currentErrEid).innerHTML = buildTfoot(empUpdated);
     const tbody = document.getElementById('tbody-'+currentErrEid);
     if(tbody) {
       // Preserve input focus if needed, but safe to fully replace rows
@@ -2082,7 +2083,6 @@ function deleteErrand(idx) {
     const empUpdated = data.find(x => x.id === currentErrEid);
     if (empUpdated) {
       updateChipsUI(currentErrEid);
-      document.getElementById('tfoot-'+currentErrEid).innerHTML = buildTfoot(empUpdated);
       const tbody = document.getElementById('tbody-'+currentErrEid);
       if(tbody) tbody.innerHTML = empUpdated.rows.map((r,i)=>buildRow(empUpdated,r,i)).join('');
     }
@@ -2120,7 +2120,6 @@ function timeEdit(eid, ri, field, el){
   const rows = tbody.querySelectorAll('tr');
   rows[ri].outerHTML = buildRow(emp, r, ri);
   
-  document.getElementById('tfoot-'+eid).innerHTML=buildTfoot(emp);
   updateChipsUI(eid);
   buildSummary(); updateGrand();
   showToast('อัปเดตเวลา ' + r.date);
@@ -2147,7 +2146,6 @@ function cellEdit(eid, ri, field, el){
   const rows = tbody.querySelectorAll('tr');
   rows[ri].outerHTML = buildRow(emp, r, ri);
   
-  document.getElementById('tfoot-'+eid).innerHTML=buildTfoot(emp);
   updateChipsUI(eid);
   buildSummary(); updateGrand();
   showToast('แก้ไข ' + r.date + ' ' + field);
@@ -2184,7 +2182,6 @@ function resetRow(e,eid,ri){
   const rows = tbody.querySelectorAll('tr');
   rows[ri].outerHTML = buildRow(emp, r, ri);
   
-  document.getElementById('tfoot-'+eid).innerHTML=buildTfoot(emp);
   updateChipsUI(eid);
   buildSummary(); updateGrand();
   
