@@ -29,3 +29,6 @@ payroll_final.html
 .vscode/
 .DS_Store
 *.log
+
+# Security
+.env

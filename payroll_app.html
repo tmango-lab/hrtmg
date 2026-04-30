@@ -517,6 +517,7 @@ td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: center; }
     <button class="btn" onclick="collapseAll()">ย่อทั้งหมด</button>
     
     <input type="file" id="csv-upload" accept=".csv" style="display: none;" onclick="this.value=null" onchange="handleCSVUpload(event)">
+    <button class="btn btn-primary" onclick="fetchFromZkSupabase()" style="background-color: var(--blue); border-color: var(--blue);">อ่านเวลาจากเครื่อง</button>
     <button class="btn btn-success" onclick="document.getElementById('csv-upload').click()">อัปโหลด CSV</button>
     <button class="btn btn-success" onclick="exportCSV()">ส่งออก Excel</button>
     <button class="btn" onclick="window.print()">พิมพ์</button>
@@ -2257,6 +2258,101 @@ document.getElementById('search').addEventListener('input',function(){
 
 // Initialize!
 initApp();
+
+// ── Direct Fetch Feature (Cloud) ────────────────────────
+async function fetchFromZkSupabase() {
+    try {
+        const btn = document.querySelector('button[onclick="fetchFromZkSupabase()"]');
+        const oldText = btn.innerHTML;
+        btn.innerHTML = 'กำลังดึงข้อมูล...';
+        btn.disabled = true;
+
+        const [year, month] = CURRENT_MONTH.split('-');
+        // Start from beginning of this month
+        const startDate = new Date(year, parseInt(month) - 1, 1, 0, 0, 0);
+        // End at the 2nd day of next month to safely cover overnight shifts
+        const endDate = new Date(year, parseInt(month), 2, 0, 0, 0);
+        
+        const { data, error } = await supabase
+            .from('zk_attendance_logs')
+            .select('*')
+            .gte('record_time', startDate.toISOString())
+            .lte('record_time', endDate.toISOString());
+            
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+            showToast('ไม่พบข้อมูลสแกนเวลาในเดือนนี้บนเซิร์ฟเวอร์');
+            btn.innerHTML = oldText;
+            btn.disabled = false;
+            return;
+        }
+
+        const np = {};
+        const offsetMs = 5 * 60 * 60 * 1000; // 5 hours cutoff for overnight shifts
+        
+        data.forEach(log => {
+            const eid = log.device_user_id;
+            const punchTime = new Date(log.record_time);
+            const logicalTime = new Date(punchTime.getTime() - offsetMs);
+            const dStr = logicalTime.getFullYear() + '-' + String(logicalTime.getMonth() + 1).padStart(2, '0') + '-' + String(logicalTime.getDate()).padStart(2, '0');
+            
+            if (dStr.startsWith(CURRENT_MONTH)) { // Filter strictly to CURRENT_MONTH
+                if (!np[eid]) np[eid] = {};
+                if (!np[eid][dStr]) np[eid][dStr] = [];
+                np[eid][dStr].push(punchTime);
+            }
+        });
+        
+        const rawPunches = {};
+        for (const eid in np) {
+            rawPunches[eid] = [];
+            for (const dStr in np[eid]) {
+                const times = np[eid][dStr].sort((a,b) => a.getTime() - b.getTime());
+                const first = times[0];
+                const last = times[times.length - 1];
+                
+                const cin = String(first.getHours()).padStart(2, '0') + ':' + String(first.getMinutes()).padStart(2, '0');
+                let cout = '';
+                
+                // Set cout only if there are multiple punches and the latest is at least 1 minute after the first
+                if (times.length > 1 && (last.getTime() - first.getTime() >= 60000)) {
+                    cout = String(last.getHours()).padStart(2, '0') + ':' + String(last.getMinutes()).padStart(2, '0');
+                }
+                
+                rawPunches[eid].push({ date: dStr, cin, cout, lateM: 0 }); 
+            }
+        }
+        
+        const processedCount = Object.keys(rawPunches).length;
+        if (processedCount > 0) {
+            for (const eid in rawPunches) {
+                if (!RAW_PUNCHES[eid]) {
+                    RAW_PUNCHES[eid] = rawPunches[eid];
+                } else {
+                    const existingDays = {};
+                    RAW_PUNCHES[eid].forEach(row => existingDays[row.date] = row);
+                    rawPunches[eid].forEach(row => existingDays[row.date] = row);
+                    RAW_PUNCHES[eid] = Object.values(existingDays).sort((a,b) => a.date.localeCompare(b.date));
+                }
+            }
+            saveRawPunches(); // save to time_punches
+            syncNewSettingsAndCalculate(); // recalculate and re-render
+            showToast('ดึงข้อมูลจากเครื่องสำเร็จ · พบ ' + processedCount + ' คน');
+        } else {
+            showToast('ไม่พบข้อมูลใหม่หลังจากประมวลผล');
+        }
+        
+        btn.innerHTML = oldText;
+        btn.disabled = false;
+        
+    } catch(err) {
+        console.error(err);
+        alert('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
+        const btn = document.querySelector('button[onclick="fetchFromZkSupabase()"]');
+        if(btn) { btn.innerHTML = 'อ่านเวลาจากเครื่อง'; btn.disabled = false; }
+    }
+}
 
 // ── CSV Upload Feature ──────────────────────────────
 function parseCSV(text) {

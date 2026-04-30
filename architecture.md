@@ -28,6 +28,7 @@ flowchart TD
     Supabase[(☁️ Supabase PostgreSQL\n6 Tables + RLS)]
     App[🧮 payroll_app.html\nCalculation Engine]
     CSV[📄 Fingerprint CSV Upload]
+    ZKCloud[☁️ ZK Sync Button\n(Direct Fetch)]
     
     %% Internal App Nodes
     InitApp[🔄 initApp()\nAsync Cloud Fetch]
@@ -42,13 +43,16 @@ flowchart TD
     Supabase -- "Returns Data" --> State
     
     CSV -- "parseCSV() & Upsert" --> Supabase
+    ZKCloud -- "Fetches & Groups by Logical Date" --> Supabase
     State -- "Applies Rules" --> Logic
     Logic -- "Calculates Net Pay" --> App
 ```
 
 1. **Authentication Check**: Both `payroll_app.html` and `payroll_settings.html` invoke `requireAuth()` to ensure a valid Supabase session exists.
 2. **Configuration Sync (Page Load)**: `initApp()` runs in `payroll_app.html`. It fetches data concurrently from Supabase (`system_settings`, `employees`, `time_punches`, etc.) and injects them into memory states (`SHIFT`, `GLOBAL_RULES`, `RAW_PUNCHES`, `EDITS`).
-3. **Import Stage**: User selects a CSV file. The SPA uses dual-encoding detection to parse punch records, updates memory, and immediately asynchronously upserts to `time_punches` via `saveRawPunchesToCloud()`.
+3. **Import Stage (Dual Strategy)**: 
+   - **Manual CSV Upload**: The SPA uses dual-encoding detection to parse punch records, updates memory, and immediately asynchronously upserts to `time_punches` via `saveRawPunchesToCloud()`.
+   - **Direct Cloud Sync**: The "อ่านเวลาจากเครื่อง" button fetches raw logs from `zk_attendance_logs`, deduplicates and groups them using a 5-hour logical date offset (to correctly assign overnight shifts), and upserts them exactly like the CSV.
 4. **Shift Resolution Stage**: `getShift()` evaluates dynamic OT group upgrades based on the employee's `detectedShift` compared against their configured baseline from the cloud.
 5. **Rate & Deduction Logic**: Evaluates Grace period rules, calculates `r.deduct`, and handles special overrides (such as `forceOverride` for Cleaners working on Sundays). 
 6. **Background Synchronization**: Features like `cellEdit`, `timeEdit`, and Advance/Errand additions immediately update the UI via partial DOM rendering and trigger asynchronous background upserts (`saveEditsToCloud()`, etc.) to Supabase without blocking the UI.
@@ -61,3 +65,10 @@ flowchart TD
 - **Partial DOM Rendering & State Preservation**: Core changes via `timeEdit`, `cellEdit`, and `resetRow` trigger `calculateAllData(true)` to recompute payroll math universally, but bypass the recursive `renderAll()` process. A dedicated `updateChipsUI()` function precisely targets and updates specific header and table summary components (`#hchips-EID`, `#chips-EID`). This localized `innerHTML/outerHTML` manipulation applies diffs only to the targets, preventing UX friction such as open accordions collapsing post-edit.
 - **Master Control Panel**: `payroll_settings.html` provides a user-friendly interface to build the cloud configuration structures.
 - **Minimalist Professional Aesthetic**: The UI was refined by systematically stripping out emojis and redundant visual clutter across all screens (`payroll_app.html`, `payroll_settings.html`, etc.), opting for a clean, professional typography-led design.
+
+### 5. Hardware Synchronization Layer (`zk-sync`)
+- **Location**: `zk-sync/` directory (Merged into the main payroll repository for single-repo deployment).
+- **Security**: Database credentials (`ZKBIO_PASS`) are stripped from code and injected via a Git-ignored `.env` file to prevent credential leaks on public/private repositories.
+- **Purpose**: A Node.js background service running on a local LAN server (e.g., PM2) to fetch raw attendance records from ZKTeco biometric devices or the ZKBioTime PostgreSQL database.
+- **Flow**: Retrieves records -> Deduplicates in memory -> Pushes real-time to Supabase `zk_attendance_logs`.
+- **Integration**: The frontend `payroll_app.html` consumes these records asynchronously upon admin request, ensuring the main application remains a zero-dependency SPA without requiring direct LAN access to biometric hardware.
