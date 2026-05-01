@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "architecture.md",
+                "file": "zk-sync/zkarchitecture.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "architecture"
+              "title": "zkarchitecture"
             }
           }
         ]
@@ -185,6 +185,7 @@
   },
   "active": "56a03027156566c1",
   "lastOpenFiles": [
+    "architecture.md",
     "zk-sync.zip",
     "migration_tasks.md",
     "skill.md",
@@ -201,7 +202,6 @@
     "zk-sync/src/lib",
     "zk-sync/src/index.css",
     "zk-sync/src/assets",
-    "zk-sync/src/App.jsx",
     "zk-sync/public/icons.svg",
     "zk-sync/public/favicon.svg",
     "zk-sync/node_modules/zod-validation-error/README.v3.md",

@@ -1031,6 +1031,7 @@ function calcOt(eid, cinH, coutH, sr) {
 }
 function customRound(mins, policy) {
   if (mins <= 10) return 0;
+  if (policy === 'minute') return mins / 60.0;
   if (policy === 'hour') return Math.ceil(mins / 60);
   return Math.ceil(mins / 30) * 0.5;
 }

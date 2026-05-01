@@ -83,23 +83,42 @@ ZKTECO_PORT=4370
 
 # ZKBioTime PostgreSQL (Strategy 2)
 ZKBIO_HOST=192.168.10.82
-# Port: 7496 (Hardcoded in index.js)
-# User: postgres (Hardcoded in index.js)
-# Pass: zkpass2026 (Hardcoded in index.js)
+ZKBIO_PORT=7496
+ZKBIO_USER=postgres
+ZKBIO_PASS=zkpass2026
+ZKBIO_NAME=biotime
 ```
 
 ---
 
-## 🚀 แนะนำการนำไปใช้งาน (Deployment)
+## 🚀 แนะนำการนำไปใช้งาน (Deployment) สำหรับ Windows
 
-เพื่อให้ระบบทำงานได้อย่างเสถียรที่สุดและเชื่อมต่อเข้า Database ภายในวง LAN ได้ง่าย ควรนำไฟล์ `index.js` และ `.env` ไปตั้งรันไว้บน **เครื่อง Server (`192.168.10.82`)** หรือเครื่อง PC ในออฟฟิศที่เสียบสาย LAN:
+เพื่อให้ระบบทำงานได้อย่างเสถียรที่สุดและเชื่อมต่อเข้า Database ภายในวง LAN ได้ง่าย ควรนำโฟลเดอร์ `zk-sync` ทั้งหมด ไปตั้งรันไว้บน **เครื่อง Server (`192.168.10.82`)** หรือเครื่อง PC ในออฟฟิศที่เสียบสาย LAN:
 
+### 🛠️ วิธีการติดตั้งครั้งแรก
 1. ติดตั้ง `Node.js` บนเครื่อง Server
-2. ติดตั้ง `pm2` (`npm install -g pm2`) 
-3. สั่งรันเป็น Background Service ด้วยคำสั่ง:
+2. เปิด PowerShell หรือ Command Prompt เข้าไปที่โฟลเดอร์ `zk-sync`
+3. ติดตั้งไลบรารีที่จำเป็น:
    ```bash
-   pm2 start index.js --name "zk-sync"
-   pm2 save
-   pm2 startup
+   npm install
    ```
-   (วิธีนี้จะทำให้โปรแกรมรันขึ้นมาอัตโนมัติแม้จะรีสตาร์ทเครื่อง)
+4. ติดตั้ง PM2 และส่วนเสริมสำหรับ Windows (เพื่อให้โปรแกรมเปิดเองตอนเปิดคอม):
+   ```bash
+   npm install -g pm2
+   npm install -g pm2-windows-startup
+   pm2-startup install
+   ```
+
+### 🏃‍♂️ การสั่งรันและบันทึก
+```bash
+pm2 start index.js --name "zk-sync"
+pm2 save
+```
+
+### 📝 คำสั่งจัดการระบบ (Management Commands)
+- **ตรวจสอบว่ารันอยู่ไหม:** `pm2 list`
+- **เรียกคืนระบบ:** `pm2 resurrect` (ใช้กรณีรีสตาร์ทคอมแล้วโปรแกรมไม่เปิดขึ้นมาเอง)
+- **หยุดชั่วคราว:** `pm2 stop zk-sync`
+- **ลบทิ้ง:** `pm2 delete zk-sync`
+- **ดูการทำงานแบบ Real-time:** pm2 stop zk-sync
+
