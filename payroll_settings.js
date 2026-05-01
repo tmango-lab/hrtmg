@@ -334,5 +334,122 @@ function parseAndLoad(data){
   renderEmployees();
 }
 
+// ==================== CLOUD SYNC & UTILS ====================
 
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if(!t) return;
+  t.innerText = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
 
+async function saveToSupabase() {
+  const data = getSettingsData();
+  
+  // 1. Save system_settings
+  const settingsRow = {
+    id: 'main',
+    shift_templates: data.shiftTemplates,
+    ot_rules: data.otDepartmentRules,
+    global_rules: data.globalRules,
+    departments: data.departments,
+    updated_at: new Date().toISOString()
+  };
+  
+  const { error: err1 } = await supabase.from('system_settings').upsert(settingsRow);
+  if (err1) { console.error(err1); alert('Error saving settings: ' + err1.message); return; }
+
+  // 2. Save employees
+  const empRows = EMPLOYEES.map(e => ({
+    id: e.id,
+    name: e.name,
+    type: e.type,
+    shift_id: e.shiftId,
+    daily_rate: e.daily,
+    monthly_rate: e.monthly,
+    hours_per_day: e.hrs,
+    ot_type: e.otType,
+    late_type: e.lateType,
+    dept: e.dept || 'other'
+  }));
+  
+  const { error: err2 } = await supabase.from('employees').upsert(empRows);
+  if (err2) { console.error(err2); alert('Error saving employees: ' + err2.message); return; }
+  
+  // ให้ลบพนักงานที่ไม่ได้อยู่ใน EMPLOYEES ออกด้วย (ลบคนที่ถูกลบออกจากหน้าตั้งค่า)
+  const currentIds = EMPLOYEES.map(e => e.id);
+  if (currentIds.length > 0) {
+    await supabase.from('employees').delete().not('id', 'in', `(${currentIds.join(',')})`);
+  }
+  
+  showToast('☁️ บันทึกการตั้งค่าขึ้น Cloud เรียบร้อยแล้ว!');
+}
+
+function loadFromLocal() {
+  const saved = localStorage.getItem('PAYROLL_SAVED_RULES_V1');
+  if(saved) {
+    try {
+      parseAndLoad(JSON.parse(saved));
+      console.log('✅ Loaded saved configuration from localStorage (Fallback)');
+    } catch(err) {
+      console.warn('⚠️ Failed to load saved config, using defaults', err);
+    }
+  }
+}
+
+async function loadFromSupabase() {
+  // 1. Load system_settings
+  const { data: settingsData, error: err1 } = await supabase.from('system_settings').select('*').eq('id', 'main').maybeSingle();
+  if (err1) { console.error('Error loading settings', err1); }
+  
+  // 2. Load employees
+  const { data: empData, error: err2 } = await supabase.from('employees').select('*');
+  if (err2) { console.error('Error loading employees', err2); }
+  
+  if (settingsData && empData && empData.length > 0) {
+    const combinedData = {
+      shiftTemplates: settingsData.shift_templates || {},
+      otDepartmentRules: settingsData.ot_rules || {},
+      globalRules: settingsData.global_rules || {},
+      departments: settingsData.departments || [],
+      shiftProfiles: {}
+    };
+    
+    empData.forEach(e => {
+      combinedData.shiftProfiles[e.id] = {
+        name: e.name,
+        shiftId: e.shift_id,
+        t: e.type,
+        d: e.daily_rate,
+        mo: e.monthly_rate,
+        hrs: e.hours_per_day,
+        otType: e.ot_type,
+        lateType: e.late_type,
+        dept: e.dept
+      };
+    });
+    
+    try {
+      parseAndLoad(combinedData);
+      console.log('✅ Loaded configuration from Supabase Cloud');
+    } catch(err) {
+      console.warn('⚠️ Failed to parse Supabase config', err);
+    }
+  } else {
+    console.log('No data in Supabase, loading from LocalStorage for migration...');
+    loadFromLocal(); // Fallback ถ้ายังไม่มีใน Cloud
+  }
+}
+
+// ==================== INIT ====================
+async function initSettings() {
+  buildTabs();
+  await loadFromSupabase();
+  renderShifts();
+  renderDeptManager();
+  renderDeptFilter();
+  renderEmployees();
+}
+
+initSettings();
