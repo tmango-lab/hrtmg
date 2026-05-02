@@ -530,8 +530,8 @@ td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: center; }
       <div id="grand-gross" style="font-size: 1.1rem; font-weight: 700; color: #334155; line-height: 1.2; margin-top: 2px;">฿0</div>
     </div>
     
-    <div style="background: #fef2f2; padding: 6px 16px; border-radius: 8px; text-align: right; min-width: 140px; border: 1px solid #fecaca; display: flex; flex-direction: column; justify-content: center;">
-      <div style="font-size: 0.7rem; color: #ef4444; font-weight: 600;">ยอดหักและเบิกจ่าย</div>
+    <div style="background: #fef2f2; padding: 6px 16px; border-radius: 8px; text-align: right; min-width: 140px; border: 1px solid #fecaca; display: flex; flex-direction: column; justify-content: center; cursor: pointer; transition: 0.2s;" onmouseover="this.style.backgroundColor='#fee2e2'" onmouseout="this.style.backgroundColor='#fef2f2'" onclick="showDeductBreakdown()" title="คลิกเพื่อดูรายละเอียดการหักเงินแต่ละคน">
+      <div style="font-size: 0.7rem; color: #ef4444; font-weight: 600;">ยอดหักและเบิกจ่าย <span style="font-size:0.6rem; opacity:0.8;">(คลิกดู)</span></div>
       <div id="grand-deduct" style="font-size: 1.1rem; font-weight: 700; color: #dc2626; line-height: 1.2; margin-top: 2px;">฿0</div>
     </div>
 
@@ -2581,6 +2581,41 @@ function handleCSVUpload(event) {
   event.target.value = '';
 }
 
+function showDeductBreakdown() {
+  let breakdown = "รายละเอียด ยอดหักและเบิกจ่ายประจำเดือน:\n\n";
+  let totalDeduct = 0;
+  let totalAdv = 0;
+  let hasData = false;
+  
+  data.forEach(emp => {
+    const t = calcEmpTotal(emp);
+    const sum = t.deduct + t.advance;
+    if (sum > 0) {
+      hasData = true;
+      breakdown += `- ${emp.name}:\n`;
+      if (t.deduct > 0) {
+        breakdown += `   หักมาสาย/ธุระ: ${fmt(t.deduct)} บ.\n`;
+        totalDeduct += t.deduct;
+      }
+      if (t.advance > 0) {
+        breakdown += `   เบิกเงินล่วงหน้า: ${fmt(t.advance)} บ.\n`;
+        totalAdv += t.advance;
+      }
+    }
+  });
+  
+  if (!hasData) {
+    alert("ไม่มียอดหักและเบิกจ่ายในเดือนนี้");
+    return;
+  }
+  
+  breakdown += `\n------------------------\n`;
+  breakdown += `รวมยอดหัก: ${fmt(totalDeduct)} บ.\n`;
+  breakdown += `รวมยอดเบิก: ${fmt(totalAdv)} บ.\n`;
+  breakdown += `ยอดรวมทั้งหมด: ${fmt(totalDeduct + totalAdv)} บ.`;
+  
+  alert(breakdown);
+}
 </script>
 <button id="btn-back-to-top" class="btn-back-to-top" title="กลับขึ้นด้านบน" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
