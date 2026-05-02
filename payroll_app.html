@@ -36,7 +36,8 @@ body {
 /* ── Header ── */
 .header { 
   background: #ffffff; 
-  padding: 16px 32px; 
+  height: 72px;
+  padding: 0 32px; 
   display: flex; 
   align-items: center; 
   justify-content: space-between; 
@@ -147,7 +148,6 @@ body {
   background: #ffffff; 
   border: 1px solid #f1f5f9; 
   border-radius: 12px; 
-  overflow: hidden; 
   transition: all 0.2s;
   box-shadow: var(--card-shadow);
 }
@@ -159,6 +159,12 @@ body {
   gap: 16px; 
   cursor: pointer;
   user-select: none;
+  position: sticky;
+  top: 72px;
+  z-index: 10;
+  background: #ffffff;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
 }
 .emp-header:hover { background: #fafafa; }
 .emp-avatar { 
@@ -478,6 +484,38 @@ td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: center; }
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+/* Back to Top Button */
+.btn-back-to-top {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-back-to-top.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.btn-back-to-top:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+}
 </style>
 </head>
 <body>
@@ -486,9 +524,21 @@ td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: center; }
     <h1>ระบบคำนวณเงินเดือน</h1>
     <div class="subtitle" id="header-subtitle">กำลังโหลด...</div>
   </div>
-  <div class="grand-total">
-    <div class="label">รวมเงินเดือนทั้งหมด</div>
-    <div class="amount" id="grand-total">฿0</div>
+  <div style="display: flex; gap: 12px; align-items: center;">
+    <div style="background: #f1f5f9; padding: 6px 16px; border-radius: 8px; text-align: right; min-width: 140px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: center;">
+      <div style="font-size: 0.7rem; color: #64748b; font-weight: 600;">ยอดรวมรายได้ (ฐาน+OT)</div>
+      <div id="grand-gross" style="font-size: 1.1rem; font-weight: 700; color: #334155; line-height: 1.2; margin-top: 2px;">฿0</div>
+    </div>
+    
+    <div style="background: #fef2f2; padding: 6px 16px; border-radius: 8px; text-align: right; min-width: 140px; border: 1px solid #fecaca; display: flex; flex-direction: column; justify-content: center;">
+      <div style="font-size: 0.7rem; color: #ef4444; font-weight: 600;">ยอดหักและเบิกจ่าย</div>
+      <div id="grand-deduct" style="font-size: 1.1rem; font-weight: 700; color: #dc2626; line-height: 1.2; margin-top: 2px;">฿0</div>
+    </div>
+
+    <div class="grand-total" style="min-width: 160px; padding: 6px 16px;">
+      <div class="label">ยอดค้างจ่ายสุทธิ</div>
+      <div class="amount" id="grand-total">฿0</div>
+    </div>
   </div>
 </div>
 
@@ -672,7 +722,8 @@ td:nth-child(2), td:nth-child(3), td:nth-child(4) { text-align: center; }
 <script src="supabase-client.js"></script>
 <script>
 
-let CURRENT_MONTH = '2026-04';
+const _now = new Date();
+let CURRENT_MONTH = _now.getFullYear() + '-' + String(_now.getMonth() + 1).padStart(2, '0');
 function getMonthKey() { return CURRENT_MONTH.replace('-', ''); }
 
 function changeMonth(newMonth) {
@@ -1468,6 +1519,24 @@ function calcEmpTotal(emp){
   return {base:tBase,ot:tOt,deduct:tDeduct,advance:tAdvance,net:tBase+tOt-tDeduct-tAdvance};
 }
 
+function calcEmpPeriodTotal(emp, startDay, endDay) {
+  let tBase=0, tOt=0, tDeduct=0;
+  emp.rows.forEach(r => {
+    const day = parseInt(r.date.split('-')[2], 10);
+    if (day >= startDay && day <= endDay) {
+      tBase += r.base; tOt += r.ot; tDeduct += r.deduct;
+    }
+  });
+  let tAdvance = (ADVANCES[emp.id] || []).reduce((sum, a) => {
+    const day = parseInt(a.date.split('-')[2], 10);
+    if (day >= startDay && day <= endDay) {
+      return sum + (parseFloat(a.amount) || 0);
+    }
+    return sum;
+  }, 0);
+  return { base: tBase, ot: tOt, deduct: tDeduct, advance: tAdvance, net: tBase + tOt - tDeduct - tAdvance };
+}
+
 
 function buildRow(emp,r,ri){
   const net=Math.round((r.base+r.ot-r.deduct)*100)/100;
@@ -1566,22 +1635,36 @@ function buildRow(emp,r,ri){
 }
 
 function buildSummary(){
-  let gt=0, sumH='';
+  let sumH='';
   data.forEach(emp=>{
-    const t=calcEmpTotal(emp); gt+=t.net;
+    const t=calcEmpTotal(emp);
     sumH+=`<div class="summary-card">
       <div class="s-label">${emp.name}</div>
       <div class="s-value s-green">฿${fmt(t.net)}</div>
     </div>`;
   });
   document.getElementById('summary-bar').innerHTML=sumH;
-  document.getElementById('grand-total').textContent='฿'+fmt(gt);
   document.getElementById('header-subtitle').textContent = `${getMonthName()} · พนักงาน ${data.length} คน · แก้ไขได้`;
+  updateGrand();
 }
 
 function updateGrand(){
-  let gt=0; data.forEach(emp=>gt+=calcEmpTotal(emp).net);
-  document.getElementById('grand-total').textContent='฿'+fmt(gt);
+  let gGross=0, gDeduct=0, gNet=0; 
+  data.forEach(emp=>{
+    const t = calcEmpTotal(emp);
+    gGross += (t.base + t.ot);
+    gDeduct += (t.deduct + t.advance);
+    gNet += t.net;
+  });
+  
+  const elGross = document.getElementById('grand-gross');
+  if (elGross) elGross.textContent = '฿' + fmt(gGross);
+  
+  const elDeduct = document.getElementById('grand-deduct');
+  if (elDeduct) elDeduct.textContent = '฿' + fmt(gDeduct);
+  
+  const elNet = document.getElementById('grand-total');
+  if (elNet) elNet.textContent = '฿' + fmt(gNet);
 }
 
 /* อัปเดต chips ทั้งบน header และ summary row ในตาราง */
@@ -1596,15 +1679,41 @@ function updateChipsUI(eid) {
 
 function buildChips(emp){
   const t=calcEmpTotal(emp);
-  const advHtml = t.advance > 0
-    ? `<br><span style="font-size:0.7rem;color:var(--yellow);font-weight:500;">(เบิก ${fmt(t.advance)})</span>` : '';
+  const p1 = calcEmpPeriodTotal(emp, 1, 15);
+  const lastDay = typeof DAYS_IN_MONTH !== 'undefined' ? DAYS_IN_MONTH : 31;
+  const p2 = calcEmpPeriodTotal(emp, 16, lastDay);
+
+  const advHtml1 = p1.advance > 0 ? `<br><span style="font-size:0.7rem;color:var(--yellow);font-weight:500;">(เบิก ${fmt(p1.advance)})</span>` : '';
+  const advHtml2 = p2.advance > 0 ? `<br><span style="font-size:0.7rem;color:var(--yellow);font-weight:500;">(เบิก ${fmt(p2.advance)})</span>` : '';
+  const advHtmlT = t.advance > 0 ? `<br><span style="font-size:0.7rem;color:var(--yellow);font-weight:500;">(เบิก ${fmt(t.advance)})</span>` : '';
+
   return `
-    <td colspan="4" style="text-align:right;padding-right:16px;font-size:0.85rem;color:#334155;font-weight:700;background:#f8fafc;">รวมทั้งเดือน</td>
-    <td style="text-align:right;padding:10px 16px;font-weight:700;color:var(--blue);background:#eff6ff;font-size:0.9rem;">${fmt(t.base)}</td>
-    <td style="text-align:right;padding:10px 16px;font-weight:700;color:var(--green);background:#f0fdf4;font-size:0.9rem;">${fmt(t.ot)}</td>
-    <td style="text-align:right;padding:10px 16px;font-weight:700;color:var(--red);background:#fef2f2;font-size:0.9rem;">${fmt(t.deduct)}${advHtml}</td>
-    <td style="text-align:right;padding:10px 16px;font-weight:800;color:var(--purple);background:#f5f3ff;font-size:0.95rem;">${fmt(t.net)}</td>
-    <td style="background:#f8fafc;"></td>
+    <tr class="chips-row-p1" style="border-bottom: 1px dashed #e2e8f0;">
+      <td colspan="4" style="text-align:right;padding-right:16px;font-size:0.8rem;color:#64748b;font-weight:600;background:#f8fafc;">ครึ่งแรก (1-15)</td>
+      <td style="text-align:right;padding:6px 16px;font-weight:600;color:var(--blue);background:#eff6ff;font-size:0.85rem;">${fmt(p1.base)}</td>
+      <td style="text-align:right;padding:6px 16px;font-weight:600;color:var(--green);background:#f0fdf4;font-size:0.85rem;">${fmt(p1.ot)}</td>
+      <td style="text-align:right;padding:6px 16px;font-weight:600;color:var(--red);background:#fef2f2;font-size:0.85rem;">${fmt(p1.deduct)}${advHtml1}</td>
+      <td style="text-align:right;padding:6px 16px;font-weight:700;color:var(--purple);background:#f5f3ff;font-size:0.9rem;">${fmt(p1.net)}</td>
+      <td style="background:#f8fafc;"></td>
+    </tr>
+    <tr class="chips-row-p2" style="border-bottom: 1px solid #e2e8f0;">
+      <td colspan="4" style="text-align:right;padding-right:16px;font-size:0.8rem;color:#64748b;font-weight:600;background:#f8fafc;">ครึ่งหลัง (16-${lastDay})</td>
+      <td style="text-align:right;padding:6px 16px;font-weight:600;color:var(--blue);background:#eff6ff;font-size:0.85rem;">${fmt(p2.base)}</td>
+      <td style="text-align:right;padding:6px 16px;font-weight:600;color:var(--green);background:#f0fdf4;font-size:0.85rem;">${fmt(p2.ot)}</td>
+      <td style="text-align:right;padding:6px 16px;font-weight:600;color:var(--red);background:#fef2f2;font-size:0.85rem;">${fmt(p2.deduct)}${advHtml2}</td>
+      <td style="text-align:right;padding:6px 16px;font-weight:700;color:var(--purple);background:#f5f3ff;font-size:0.9rem;">${fmt(p2.net)}</td>
+      <td style="background:#f8fafc;"></td>
+    </tr>
+    <tr class="chips-row">
+      <td colspan="4" style="text-align:right;padding-right:16px;font-size:0.85rem;color:#334155;font-weight:700;background:#f8fafc;">ยอดรวมทั้งเดือน</td>
+      <td style="text-align:right;padding:10px 16px;font-weight:700;color:var(--blue);background:#eff6ff;font-size:0.9rem;">${fmt(t.base)}</td>
+      <td style="text-align:right;padding:10px 16px;font-weight:700;color:var(--green);background:#f0fdf4;font-size:0.9rem;">${fmt(t.ot)}</td>
+      <td style="text-align:right;padding:10px 16px;font-weight:700;color:var(--red);background:#fef2f2;font-size:0.9rem;">${fmt(t.deduct)}${advHtmlT}</td>
+      <td style="text-align:right;padding:10px 16px;font-weight:800;color:var(--purple);background:#f5f3ff;font-size:0.95rem;">${fmt(t.net)}</td>
+      <td style="background:#f8fafc; text-align:left; padding:8px 16px; vertical-align:middle;">
+        <button onclick="openAdvanceModal(event,'${emp.id}')" style="background:#f59e0b; color:#fff; border:none; font-size:0.75rem; font-weight:600; padding:6px 12px; border-radius:6px; cursor:pointer; box-shadow:0 1px 2px rgba(245,158,11,0.2);">เบิกเงิน</button>
+      </td>
+    </tr>
   `;
 }
 
@@ -1666,8 +1775,8 @@ function renderAll(){
             <tbody id="tbody-${emp.id}">
               ${emp.rows.map((r,i)=>buildRow(emp,r,i)).join('')}
             </tbody>
-            <tfoot>
-              <tr id="chips-${emp.id}" class="chips-row">${buildChips(emp)}</tr>
+            <tfoot id="chips-${emp.id}">
+              ${buildChips(emp)}
             </tfoot>
           </table>
         </div>
@@ -1684,9 +1793,16 @@ function toggle(eid){
   if (!body) return;
   const isOpen = body.classList.contains('open');
   if (isOpen) {
+    const cardTopBefore = card ? card.getBoundingClientRect().top : 0;
+    const absoluteTop = window.scrollY + cardTopBefore;
+    
     body.classList.remove('open');
     if (card) card.classList.remove('selected');
     if (tog)  tog.style.transform = '';
+    
+    if (card && cardTopBefore < 72) {
+       window.scrollTo({ top: absoluteTop - 72, behavior: 'instant' });
+    }
   } else {
     body.classList.add('open');
     if (card) card.classList.add('selected');
@@ -1856,7 +1972,16 @@ function renderAdvanceList() {
     const dParts = adv.date.split('-');
     const dShow = dParts.length === 3 ? `${dParts[2]}/${dParts[1]}/${dParts[0]}` : adv.date;
     html += `<tr>
-      <td>${dShow}</td>
+      <td style="vertical-align: middle;">
+        <span style="border-bottom: 1px dashed #cbd5e1; cursor: pointer; color: var(--text); display: inline-block; padding: 4px 0;" 
+              title="คลิกเพื่อแก้ไขวันที่"
+              onclick="document.getElementById('adv-edit-${idx}').showPicker()">
+              ${dShow}
+        </span>
+        <input type="date" id="adv-edit-${idx}" value="${adv.date}" 
+               onchange="updateAdvanceDate(${idx}, this.value)" 
+               style="position: absolute; opacity: 0; width: 1px; height: 1px; z-index: -1;">
+      </td>
       <td style="color:var(--muted);font-size:0.8rem">${adv.note}</td>
       <td style="text-align:right;color:var(--yellow);font-weight:600">฿${fmt(adv.amount)}</td>
       <td style="text-align:center">
@@ -1870,6 +1995,23 @@ function renderAdvanceList() {
   }
   
   document.getElementById('adv-list-tbody').innerHTML = html;
+}
+
+function updateAdvanceDate(idx, newDate) {
+  if (!currentAdvEid || !ADVANCES[currentAdvEid]) return;
+  if (!newDate) return;
+  
+  ADVANCES[currentAdvEid][idx].date = newDate;
+  ADVANCES[currentAdvEid].sort((a,b) => a.date.localeCompare(b.date));
+  saveAdvances();
+  
+  calculateAllData(true);
+  const empUpdated = data.find(x => x.id === currentAdvEid);
+  if (empUpdated) updateChipsUI(currentAdvEid);
+  buildSummary(); updateGrand();
+  
+  renderAdvanceList();
+  showToast('อัพเดทวันที่เบิกเงินสำเร็จ');
 }
 
 function addAdvance() {
@@ -1891,7 +2033,7 @@ function addAdvance() {
   const emp = data.find(x => x.id === currentAdvEid);
   const t = calcEmpTotal(emp);
   
-  if (amount > t.net) {
+  if (Math.round(amount * 100) > Math.round(t.net * 100)) {
     alert(`ไม่สามารถเบิกได้!\nยอดเบิก (${fmt(amount)} บ.) มากกว่ายอดสุทธิที่เหลือ (${fmt(t.net)} บ.)`);
     return;
   }
@@ -2440,4 +2582,18 @@ function handleCSVUpload(event) {
 }
 
 </script>
+<button id="btn-back-to-top" class="btn-back-to-top" title="กลับขึ้นด้านบน" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<script>
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('btn-back-to-top');
+  if (btn) {
+    if (window.scrollY > 300) btn.classList.add('show');
+    else btn.classList.remove('show');
+  }
+});
+</script>
+
 </body></html>
